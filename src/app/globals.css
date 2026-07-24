@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/*
+  Cleat design system — tokens lifted directly from the static mockup
+  (design/cleat-full-overview.html). Defining color/font vars inside
+  @theme generates Tailwind utilities: bg-navy, text-dock, border-line, etc.
+*/
+@theme {
+  --color-navy: #0f2a3d;
+  --color-navy-deep: #081826;
+  --color-dock: #c9a876;
+  --color-seaglass: #5b8c7b;
+  --color-coral: #e0602f;
+  --color-paper: #f6f3ec;
+  --color-paper-dim: #eae5d8;
+  --color-ink: #22313a;
+  --color-ink-soft: #5c6b72;
+  --color-line: rgba(15, 42, 61, 0.12);
+
+  /* wired to the next/font variables set on <html> in layout.tsx */
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-navy-deep);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Mono label helper used all over the mockup (eyebrows, meta, tab labels) */
+.u-mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Hide scrollbars inside the phone content areas, matching the mockup */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

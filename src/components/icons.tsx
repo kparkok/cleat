@@ -1,0 +1,141 @@
+import type { SVGProps } from "react";
+
+// Line icons matching the mockup: 24x24 grid, no fill, stroke = currentColor.
+// Color is controlled by the parent via `text-*`; size via `className`.
+
+type IconProps = SVGProps<SVGSVGElement>;
+
+function Base({ children, ...props }: IconProps & { children: React.ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function HomeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3 11l9-7 9 7" />
+      <path d="M5 10v10h14V10" />
+    </Base>
+  );
+}
+
+export function NewsIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 6h16M4 12h16M4 18h10" />
+    </Base>
+  );
+}
+
+export function UserIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6" />
+    </Base>
+  );
+}
+
+export function MarinaIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 2 L4 7 L4 15 L12 22 L20 15 L20 7 Z" />
+    </Base>
+  );
+}
+
+export function PhoneIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2C9 21 3 15 3 7a2 2 0 0 1 1-3Z" />
+    </Base>
+  );
+}
+
+export function HeartIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={1.8} {...props}>
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
+    </Base>
+  );
+}
+
+export function ReplyIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={1.8} {...props}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
+    </Base>
+  );
+}
+
+export function PlusIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={2.2} {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Base>
+  );
+}
+
+export function ChevronLeftIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={2} {...props}>
+      <path d="M15 18l-6-6 6-6" />
+    </Base>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={2} {...props}>
+      <path d="M9 6l6 6-6 6" />
+    </Base>
+  );
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={2} {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </Base>
+  );
+}
+
+export function FileIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M6 2h9l5 5v15H6z" />
+      <path d="M15 2v5h5" />
+    </Base>
+  );
+}
+
+export function AlertIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v4m0 4h.01" />
+    </Base>
+  );
+}
+
+export function IssuesIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v4m0 4h.01" />
+    </Base>
+  );
+}

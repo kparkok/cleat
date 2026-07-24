@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cleat — Full App Overview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2A3D; --navy-deep:#081826; --dock:#C9A876; --seaglass:#5B8C7B;
+    --coral:#E0602F; --paper:#F6F3EC; --paper-dim:#EAE5D8; --ink:#22313A;
+    --ink-soft:#5C6B72; --line:rgba(15,42,61,0.12); --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--navy-deep);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(201,168,118,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(91,140,123,0.10), transparent 45%);
+    font-family:'Inter',sans-serif; color:var(--ink); padding:56px 24px 110px;
+  }
+  .intro{max-width:920px;margin:0 auto 8px;color:var(--paper);}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dock);margin-bottom:14px;}
+  .intro h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(32px,4.6vw,52px);margin:0 0 12px;line-height:1.06;letter-spacing:-0.01em;}
+  .intro p{font-size:15.5px;line-height:1.6;color:rgba(246,243,236,0.72);max-width:640px;margin:0;}
+
+  .group-label{
+    max-width:1400px;margin:0 auto;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--dock);padding:8px 4px;border-bottom:1px solid rgba(246,243,236,0.15);margin-top:64px;margin-bottom:32px;
+  }
+  .group-label span{color:rgba(246,243,236,0.4);font-weight:400;text-transform:none;letter-spacing:0;margin-left:10px;}
+
+  .frames{max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:44px;justify-content:center;}
+  .frame-block{display:flex;flex-direction:column;align-items:center;}
+  .frame-label{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dock);margin-bottom:14px;text-align:center;max-width:300px;}
+
+  .phone{width:290px;height:610px;background:var(--navy-deep);border-radius:44px;padding:12px;box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);position:relative;}
+  .screen{width:100%;height:100%;background:var(--paper);border-radius:34px;overflow:hidden;display:flex;flex-direction:column;position:relative;}
+  .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:var(--navy-deep);border-radius:14px;z-index:50;}
+  .statusbar{height:44px;flex-shrink:0;}
+  .content{flex:1;overflow-y:auto;scrollbar-width:none;position:relative;}
+  .content::-webkit-scrollbar{display:none;}
+
+  .app-header{padding:6px 20px 14px;background:var(--navy);color:var(--paper);}
+  .app-header .marina-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;}
+  .app-header .marina-sub{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--dock);margin-top:2px;}
+  .section-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);padding:16px 20px 8px;}
+
+  .card{margin:0 20px 12px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .card-row{display:flex;justify-content:space-between;align-items:center;}
+  .card-title{font-size:13.5px;font-weight:600;color:var(--navy);}
+  .card-meta{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--ink-soft);margin-top:4px;}
+
+  .quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 6px;}
+  .quick-btn{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:13px 12px;display:flex;flex-direction:column;gap:8px;}
+  .quick-btn .qicon{width:24px;height:24px;border-radius:7px;background:var(--navy);display:flex;align-items:center;justify-content:center;}
+  .quick-btn .qicon svg{width:13px;height:13px;stroke:var(--dock);}
+  .quick-btn .qlabel{font-size:12px;font-weight:600;color:var(--navy);}
+
+  .tabbar{height:60px;flex-shrink:0;background:var(--white);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding-bottom:6px;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-soft);}
+  .tab svg{width:18px;height:18px;stroke:var(--ink-soft);fill:none;stroke-width:1.7;}
+  .tab.active{color:var(--navy);}
+  .tab.active svg{stroke:var(--navy);}
+  .tab span{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.03em;}
+
+  /* Onboarding */
+  .onboard{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 26px;background:var(--navy);}
+  .onboard-back{width:28px;height:28px;border-radius:8px;background:rgba(246,243,236,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+  .onboard-back svg{width:13px;height:13px;stroke:var(--paper);}
+  .onboard h2{font-family:'Fraunces',serif;color:var(--paper);font-size:21px;font-weight:600;margin:0 0 8px;line-height:1.18;}
+  .onboard p{color:rgba(246,243,236,0.6);font-size:12px;line-height:1.6;margin:0 0 20px;}
+  .usage-card{border:1.5px solid rgba(246,243,236,0.18); border-radius:12px; padding:13px; margin-bottom:9px; display:flex; align-items:flex-start; gap:11px;}
+  .usage-card.selected{border-color:var(--dock); background:rgba(201,168,118,0.08);}
+  .usage-radio{width:17px;height:17px;border-radius:50%;border:2px solid rgba(246,243,236,0.3);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;}
+  .usage-radio.on{border-color:var(--dock);}
+  .usage-radio.on::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--dock);}
+  .usage-title{font-size:13px;font-weight:600;color:var(--paper);margin-bottom:2px;}
+  .usage-sub{font-size:11px;color:rgba(246,243,236,0.55);line-height:1.4;}
+  .onboard-btn{background:var(--dock);color:var(--navy);text-align:center;padding:13px;border-radius:10px;font-weight:700;font-size:13.5px;margin-top:14px;}
+
+  /* Toggle */
+  .toggle-wrap{padding:14px 20px 0;background:var(--navy);}
+  .segmented{display:flex; background:rgba(246,243,236,0.08); border-radius:10px; padding:3px;}
+  .seg-btn{flex:1; text-align:center; padding:8px 0; border-radius:8px; font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; color:rgba(246,243,236,0.55); font-weight:700;}
+  .seg-btn.active{background:var(--dock); color:var(--navy);}
+  .toggle-spacer{height:14px;background:var(--navy);}
+
+  /* Marina board announcements */
+  .announce-item{margin:0 20px 12px;padding-bottom:12px;border-bottom:1px solid var(--line);}
+  .announce-item:last-child{border-bottom:none;}
+  .announce-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .announce-cat{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--seaglass);font-weight:700;}
+  .announce-cat.maint{color:#8A6A2E;}
+  .announce-date{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--ink-soft);}
+  .announce-title{font-size:13.5px;font-weight:600;color:var(--navy);margin-bottom:3px;}
+  .announce-body{font-size:11.5px;color:var(--ink-soft);line-height:1.5;}
+
+  /* Pinned items on Marina board */
+  .pinned-item{margin:0 20px 10px;background:var(--white);border:1px solid var(--dock);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:11px;}
+  .pinned-icon{width:32px;height:32px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .pinned-icon svg{width:15px;height:15px;stroke:var(--dock);fill:none;stroke-width:1.7;}
+  .pinned-title{font-size:12.5px;font-weight:600;color:var(--navy);}
+  .pinned-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-soft);margin-top:2px;}
+
+  /* Community posts */
+  .post-item{margin:0 20px 12px; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:13px 14px;}
+  .post-top{display:flex; align-items:center; gap:9px; margin-bottom:8px;}
+  .post-avatar{width:26px;height:26px;border-radius:50%;background:var(--paper-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Space Mono',monospace;font-size:9.5px;font-weight:700;color:var(--navy);}
+  .post-name{font-size:12px;font-weight:600;color:var(--navy);}
+  .post-meta-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .post-date{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-soft);margin-left:auto;}
+  .member-tag{font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:0.04em;text-transform:uppercase;color:var(--seaglass); font-weight:700; background:rgba(91,140,123,0.12);padding:2px 7px;border-radius:10px;}
+  .usage-badge{font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:0.03em;text-transform:uppercase;color:var(--ink-soft); font-weight:700; background:var(--paper-dim);padding:2px 7px;border-radius:10px;}
+  .visiting-tag{font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:0.03em;text-transform:uppercase;color:#8A6A2E; font-weight:700; background:rgba(201,168,118,0.22);padding:2px 7px;border-radius:10px;display:inline-flex;align-items:center;gap:3px;}
+  .visiting-tag svg{width:8px;height:8px;stroke:#8A6A2E;fill:none;stroke-width:2.5;}
+  .post-body{font-size:11.5px;color:var(--ink);line-height:1.5;}
+  .post-actions{display:flex;gap:14px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line);}
+  .post-action{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink-soft);}
+  .post-action svg{width:12px;height:12px;stroke:var(--ink-soft);fill:none;stroke-width:1.8;}
+  .disclaimer-banner{margin:0 20px 12px; background:rgba(91,140,123,0.08); border:1px solid rgba(91,140,123,0.25); border-radius:10px; padding:10px 12px; font-size:10.5px; color:var(--ink-soft); line-height:1.5;}
+  .disclaimer-banner b{color:var(--seaglass);}
+  .fab{position:absolute; bottom:78px; right:16px; width:44px;height:44px;border-radius:50%; background:var(--coral); display:flex;align-items:center;justify-content:center; box-shadow:0 8px 20px rgba(224,96,47,0.4);}
+  .fab svg{width:18px;height:18px;stroke:var(--white);fill:none;stroke-width:2.2;}
+
+  /* Contacts */
+  .contact-item{margin:0 20px 10px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:11px;}
+  .contact-avatar{width:34px;height:34px;border-radius:10px;background:var(--paper-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .contact-avatar svg{width:16px;height:16px;stroke:var(--navy);fill:none;stroke-width:1.7;}
+  .contact-name{font-size:12.5px;font-weight:600;color:var(--navy);}
+  .contact-role{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-soft);margin-top:2px;}
+  .contact-call{margin-left:auto;width:28px;height:28px;border-radius:8px;background:var(--paper-dim);display:flex;align-items:center;justify-content:center;}
+  .contact-call svg{width:13px;height:13px;stroke:var(--navy);fill:none;stroke-width:1.8;}
+
+  /* Documents */
+  .doc-item{margin:0 20px 10px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:11px;}
+  .doc-icon{width:32px;height:32px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .doc-icon svg{width:15px;height:15px;stroke:var(--dock);fill:none;stroke-width:1.7;}
+  .doc-name{font-size:12px;font-weight:600;color:var(--navy);}
+  .doc-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-soft);margin-top:2px;}
+
+  /* Marina search + modal */
+  .search-header{padding:8px 20px 14px;background:var(--navy);}
+  .search-title{font-family:'Fraunces',serif;color:var(--paper);font-size:18px;font-weight:600;margin-bottom:11px;}
+  .search-box{background:rgba(246,243,236,0.08); border:1px solid rgba(246,243,236,0.18); border-radius:10px; padding:10px 13px; display:flex; align-items:center; gap:9px;}
+  .search-box svg{width:14px;height:14px;stroke:rgba(246,243,236,0.5);fill:none;stroke-width:2;flex-shrink:0;}
+  .search-box span{font-family:'Space Mono',monospace;font-size:11.5px;color:rgba(246,243,236,0.45);}
+  .marina-result{margin:0 20px 10px; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:12px 13px; display:flex; align-items:center; gap:11px;}
+  .marina-icon{width:34px;height:34px;border-radius:10px;background:var(--paper-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .marina-icon svg{width:16px;height:16px;stroke:var(--navy);fill:none;stroke-width:1.7;}
+  .marina-r-name{font-size:12.5px;font-weight:600;color:var(--navy);}
+  .marina-r-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-soft);margin-top:3px;display:flex;align-items:center;gap:6px;}
+  .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .status-dot.verified{background:var(--seaglass);}
+  .status-dot.community{background:var(--dock);}
+  .modal-backdrop{position:absolute; inset:0; background:rgba(8,24,38,0.55); display:flex; align-items:flex-end; z-index:40;}
+  .modal-sheet{width:100%; background:var(--paper); border-radius:20px 20px 0 0; padding:20px 20px 24px;}
+  .modal-handle{width:34px;height:4px;background:var(--line);border-radius:3px;margin:0 auto 15px;}
+  .modal-marina-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--navy);margin-bottom:2px;}
+  .modal-marina-loc{font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-soft);margin-bottom:16px;}
+  .choice-card{border:1.5px solid var(--line); border-radius:12px; padding:13px; margin-bottom:9px; display:flex; align-items:flex-start; gap:11px;}
+  .choice-card.selected{border-color:var(--navy); background:rgba(15,42,61,0.03);}
+  .choice-radio{width:17px;height:17px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;}
+  .choice-radio.on{border-color:var(--navy);}
+  .choice-radio.on::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--navy);}
+  .choice-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px;}
+  .choice-sub{font-size:11px;color:var(--ink-soft);line-height:1.4;}
+  .modal-btn{background:var(--coral);color:var(--white);text-align:center;padding:12px;border-radius:10px;font-weight:700;font-size:13px;margin-top:6px;}
+
+  /* STAFF browser frame */
+  .browser{width:900px;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);}
+  .browser-bar{height:38px;background:var(--paper-dim);display:flex;align-items:center;gap:6px;padding:0 14px;border-bottom:1px solid var(--line);}
+  .browser-dot{width:9px;height:9px;border-radius:50%;background:rgba(15,42,61,0.15);}
+  .browser-url{margin-left:14px;background:var(--white);border-radius:6px;padding:5px 12px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--ink-soft);flex:1;max-width:340px;}
+  .staff-shell{display:flex;height:560px;}
+  .staff-nav{width:190px;background:var(--navy);flex-shrink:0;padding:20px 0;display:flex;flex-direction:column;}
+  .staff-brand{font-family:'Fraunces',serif;color:var(--paper);font-size:16px;font-weight:600;padding:0 20px 20px;border-bottom:1px solid rgba(246,243,236,0.12);margin-bottom:14px;}
+  .staff-nav-item{padding:11px 20px;font-size:12.5px;color:rgba(246,243,236,0.55);display:flex;align-items:center;gap:10px;font-family:'Inter',sans-serif;}
+  .staff-nav-item svg{width:15px;height:15px;stroke:rgba(246,243,236,0.55);fill:none;stroke-width:1.7;flex-shrink:0;}
+  .staff-nav-item.active{background:rgba(201,168,118,0.14);color:var(--dock);border-right:2px solid var(--dock);}
+  .staff-nav-item.active svg{stroke:var(--dock);}
+  .staff-main{flex:1;overflow-y:auto;padding:26px 30px;}
+  .staff-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+  .staff-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:22px;}
+  .stat-row{display:flex;gap:14px;margin-bottom:26px;}
+  .stat-card{flex:1;background:var(--white);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .stat-num{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--navy);}
+  .stat-lbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-soft);margin-top:4px;}
+  .stat-card.accent .stat-num{color:var(--coral);}
+  .table{width:100%;border-collapse:collapse;}
+  .table th{text-align:left;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);padding:0 12px 10px;border-bottom:1px solid var(--line);}
+  .table td{padding:12px;font-size:12.5px;border-bottom:1px solid var(--line);color:var(--ink);}
+  .status-pill{font-family:'Space Mono',monospace;font-size:9.5px;padding:4px 9px;border-radius:20px;font-weight:700;letter-spacing:0.03em;}
+  .status-pill.new{background:rgba(224,96,47,0.12);color:var(--coral);}
+  .status-pill.sent{background:rgba(91,140,123,0.15);color:var(--seaglass);}
+  .status-pill.scheduled{background:rgba(201,168,118,0.2);color:#8A6A2E;}
+  .composer{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:22px;max-width:560px;}
+  .comp-field{margin-bottom:16px;}
+  .comp-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px;}
+  .comp-input{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);}
+  .comp-input.tall{min-height:80px;}
+  .comp-chips{display:flex;gap:8px;}
+  .comp-chip{font-size:11.5px;padding:7px 12px;border-radius:20px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);}
+  .comp-chip.on{background:var(--navy);color:var(--paper);border-color:var(--navy);}
+  .comp-actions{display:flex;gap:10px;margin-top:20px;}
+  .btn-primary{background:var(--coral);color:var(--white);padding:11px 20px;border-radius:8px;font-size:13px;font-weight:700;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);padding:11px 20px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid var(--line);}
+
+  /* Claim queue table extras */
+  .member-row-avatar{width:24px;height:24px;border-radius:50%;background:var(--paper-dim);display:inline-flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--navy);margin-right:8px;vertical-align:middle;}
+
+  footer.note{max-width:900px;margin:64px auto 0;color:rgba(246,243,236,0.5);font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;text-align:center;}
+  @media (max-width:960px){.browser{width:100%;}}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="eyebrow">Cleat · Full App Overview · V2</div>
+  <h1>Every screen, updated.</h1>
+  <p>The complete picture with "Member" terminology throughout, usage-type onboarding, the marina/community board split, the multi-marina visiting model — and the staff side that manages all of it. Documents is dropped from Phase 1: it assumed a marina management system feeding it, which unclaimed and community-run marinas won't have yet. Rules and emergency info now live as pinned posts on the Marina board instead.</p>
+</div>
+
+<div class="group-label">Member app — mobile web <span>onboarding, home, boards, contacts, docs, marina switching</span></div>
+<div class="frames">
+
+  <!-- ONBOARDING -->
+  <div class="frame-block">
+    <div class="frame-label">How you use the marina</div>
+    <div class="phone"><div class="screen"><div class="notch"></div><div class="statusbar"></div>
+      <div class="onboard">
+        <div class="onboard-back"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <h2>How do you use<br>Shilshole Bay Marina?</h2>
+        <p>No wrong answer — you can change this anytime.</p>
+        <div class="usage-card"><div class="usage-radio"></div><div><div class="usage-title">I live aboard</div><div class="usage-sub">My boat is my primary residence</div></div></div>
+        <div class="usage-card selected"><div class="usage-radio on"></div><div><div class="usage-title">Weekend &amp; seasonal use</div><div class="usage-sub">I keep my boat here and visit regularly</div></div></div>
+        <div class="usage-card"><div class="usage-radio"></div><div><div class="usage-title">Storage or occasional use</div><div class="usage-sub">My boat stays here but I visit rarely</div></div></div>
+        <div class="onboard-btn">Continue</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- HOME -->
+  <div class="frame-block">
+    <div class="frame-label">Home</div>
+    <div class="phone"><div class="screen"><div class="notch"></div><div class="statusbar"></div>
+      <div class="content">
+        <div class="app-header"><div class="marina-name">Shilshole Bay Marina</div><div class="marina-sub">Dock G · Slip 14</div></div>
+        <div class="section-title">Latest announcement</div>
+        <div class="card"><div class="card-row"><span class="card-title">Fuel dock closed Thursday</span></div><div class="card-meta">Posted Jul 19 · Maintenance</div></div>
+        <div class="section-title">Get around</div>
+        <div class="quick-grid">
+          <div class="quick-btn"><div class="qicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><div class="qlabel">Announcements</div></div>
+          <div class="quick-btn"><div class="qicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M4 21c1-4 5-6 8-6s7 2 8 6"/></svg></div><div class="qlabel">Contacts</div></div>
+          <div class="quick-btn"><div class="qicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L4 7 L4 15 L12 22 L20 15 L20 7 Z"/></svg></div><div class="qlabel">Switch marina</div></div>
+        </div>
+        <div class="section-title">Marina office</div>
+        <div class="card"><div class="card-row"><span class="card-title">Open today, 8am – 5pm</span></div><div class="card-meta">(206) 555-0148 · Dock A, Building 1</div></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab active"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- MARINA BOARD -->
+  <div class="frame-block">
+    <div class="frame-label">Announcements — Marina board</div>
+    <div class="phone"><div class="screen"><div class="notch"></div><div class="statusbar"></div>
+      <div class="app-header"><div class="marina-name">Announcements</div><div class="marina-sub">Shilshole Bay Marina</div></div>
+      <div class="toggle-wrap"><div class="segmented"><div class="seg-btn active">Marina board</div><div class="seg-btn">Community</div></div></div>
+      <div class="toggle-spacer"></div>
+      <div class="content">
+        <div class="section-title" style="padding-top:14px;">Pinned</div>
+        <div class="pinned-item">
+          <div class="pinned-icon"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/></svg></div>
+          <div><div class="pinned-title">Marina rules &amp; regulations</div><div class="pinned-meta">Updated Jun 2026</div></div>
+        </div>
+        <div class="pinned-item">
+          <div class="pinned-icon" style="background:rgba(224,96,47,0.12);"><svg viewBox="0 0 24 24" stroke="#E0602F"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></div>
+          <div><div class="pinned-title">Emergency procedures</div><div class="pinned-meta">Updated May 2026</div></div>
+        </div>
+        <div class="section-title">Recent</div>
+        <div class="announce-item"><div class="announce-top"><span class="announce-cat maint">Maintenance</span><span class="announce-date">Jul 19</span></div><div class="announce-title">Fuel dock closed Thursday</div><div class="announce-body">Scheduled pump maintenance from 8am to 2pm. Fairwater fuel dock will remain open.</div></div>
+        <div class="announce-item"><div class="announce-top"><span class="announce-cat" style="color:var(--navy);">Community</span><span class="announce-date">Jul 17</span></div><div class="announce-title">Summer boater potluck — Aug 2</div><div class="announce-body">Guest dock pavilion, 5:30pm. Sign up at the office to bring a dish.</div></div>
+        <div class="announce-item"><div class="announce-top"><span class="announce-cat" style="color:var(--navy);">General</span><span class="announce-date">Jul 14</span></div><div class="announce-title">New pump-out station opens on E dock</div><div class="announce-body">Second pump-out station now operational, reducing weekend wait times.</div></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab active"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- COMMUNITY BOARD -->
+  <div class="frame-block">
+    <div class="frame-label">Announcements — Community board</div>
+    <div class="phone"><div class="screen"><div class="notch"></div><div class="statusbar"></div>
+      <div class="app-header"><div class="marina-name">Announcements</div><div class="marina-sub">Shilshole Bay Marina</div></div>
+      <div class="toggle-wrap"><div class="segmented"><div class="seg-btn">Marina board</div><div class="seg-btn active">Community</div></div></div>
+      <div class="toggle-spacer"></div>
+      <div class="content">
+        <div class="disclaimer-banner" style="margin-top:14px;"><b>Member-run.</b> Posts here come from other marina members, not staff.</div>
+        <div class="post-item">
+          <div class="post-top"><div class="post-avatar">JM</div><div><div class="post-name">Jordan M.</div><div class="post-meta-row"><span class="member-tag">Member</span><span class="usage-badge">Weekend</span></div></div><div class="post-date">2h ago</div></div>
+          <div class="post-body">Anyone have a spare 30-amp shore power adapter I could borrow this weekend?</div>
+          <div class="post-actions"><div class="post-action"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>6</div><div class="post-action"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>3 replies</div></div>
+        </div>
+        <div class="post-item">
+          <div class="post-top"><div class="post-avatar">AR</div><div><div class="post-name">Alex R.</div><div class="post-meta-row"><span class="visiting-tag"><svg viewBox="0 0 24 24"><path d="M12 2 L4 7 L4 15 L12 22 L20 15 L20 7 Z"/></svg>Visiting from Fairhaven</span></div></div><div class="post-date">3h ago</div></div>
+          <div class="post-body">Beautiful marina! Does the fuel dock take card after 6pm?</div>
+          <div class="post-actions"><div class="post-action"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>2</div><div class="post-action"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>2 replies</div></div>
+        </div>
+      </div>
+      <div class="fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+      <div class="tabbar">
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab active"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div class="frame-block">
+    <div class="frame-label">Contacts</div>
+    <div class="phone"><div class="screen"><div class="notch"></div><div class="statusbar"></div>
+      <div class="content">
+        <div class="app-header" style="padding-bottom:14px;"><div class="marina-name">Contacts</div><div class="marina-sub">Shilshole Bay Marina</div></div>
+        <div class="section-title">Marina staff</div>
+        <div class="contact-item"><div class="contact-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c1.5-4.5 6-7 7-7s5.5 2.5 7 7"/></svg></div><div><div class="contact-name">Marina office</div><div class="contact-role">General inquiries</div></div><div class="contact-call"><svg viewBox="0 0 24 24"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2C9 21 3 15 3 7a2 2 0 0 1 1-3Z"/></svg></div></div>
+        <div class="contact-item"><div class="contact-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c1.5-4.5 6-7 7-7s5.5 2.5 7 7"/></svg></div><div><div class="contact-name">Operations</div><div class="contact-role">Dock &amp; slip questions</div></div><div class="contact-call"><svg viewBox="0 0 24 24"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2C9 21 3 15 3 7a2 2 0 0 1 1-3Z"/></svg></div></div>
+        <div class="section-title">Emergency</div>
+        <div class="contact-item" style="border-color:rgba(224,96,47,0.3);"><div class="contact-avatar" style="background:rgba(224,96,47,0.12);"><svg viewBox="0 0 24 24" stroke="#E0602F"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></div><div><div class="contact-name">Harbor emergency line</div><div class="contact-role">24 hours</div></div><div class="contact-call" style="background:rgba(224,96,47,0.12);"><svg viewBox="0 0 24 24" stroke="#E0602F"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2C9 21 3 15 3 7a2 2 0 0 1 1-3Z"/></svg></div></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab active"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- MARINA SWITCHER -->
+  <div class="frame-block">
+    <div class="frame-label">Switch or add a marina</div>
+    <div class="phone"><div class="screen"><div class="notch"></div><div class="statusbar"></div>
+      <div class="search-header">
+        <div class="search-title">Find a marina</div>
+        <div class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span>Fairhaven</span></div>
+      </div>
+      <div class="content">
+        <div class="marina-result" style="margin-top:14px;"><div class="marina-icon"><svg viewBox="0 0 24 24"><path d="M12 2 L4 7 L4 15 L12 22 L20 15 L20 7 Z"/></svg></div><div><div class="marina-r-name">Fairhaven Marina</div><div class="marina-r-meta"><span class="status-dot verified"></span>Verified · Bellingham, WA</div></div></div>
+      </div>
+      <div class="modal-backdrop">
+        <div class="modal-sheet">
+          <div class="modal-handle"></div>
+          <div class="modal-marina-name">Fairhaven Marina</div>
+          <div class="modal-marina-loc">BELLINGHAM, WA</div>
+          <div class="choice-card"><div class="choice-radio"></div><div><div class="choice-title">I'm a member here</div><div class="choice-sub">My boat is kept at this marina.</div></div></div>
+          <div class="choice-card selected"><div class="choice-radio on"></div><div><div class="choice-title">I'm visiting</div><div class="choice-sub">Short stay. You'll keep your home marina too.</div></div></div>
+          <div class="modal-btn">Continue as visitor</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<div class="group-label">Marina staff portal — desktop web <span>member oversight, claim queue, dashboard, announcements</span></div>
+<div class="frames">
+
+  <!-- STAFF DASHBOARD -->
+  <div class="frame-block">
+    <div class="frame-label">Admin dashboard</div>
+    <div class="browser">
+      <div class="browser-bar"><div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-url">staff.cleat.app/dashboard</div></div>
+      <div class="staff-shell">
+        <div class="staff-nav">
+          <div class="staff-brand">Cleat</div>
+          <div class="staff-nav-item active"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Dashboard</div>
+          <div class="staff-nav-item"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Announcements</div>
+          <div class="staff-nav-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg>Members</div>
+          <div class="staff-nav-item" style="opacity:0.4;"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Issues (Phase 2)</div>
+        </div>
+        <div class="staff-main">
+          <div class="staff-title">Dashboard</div>
+          <div class="staff-sub">SHILSHOLE BAY MARINA · JULY 20, 2026</div>
+          <div class="stat-row">
+            <div class="stat-card"><div class="stat-num">142</div><div class="stat-lbl">Active members</div></div>
+            <div class="stat-card accent"><div class="stat-num">5</div><div class="stat-lbl">Visitors this week</div></div>
+            <div class="stat-card"><div class="stat-num">6</div><div class="stat-lbl">Posted this month</div></div>
+            <div class="stat-card"><div class="stat-num">89%</div><div class="stat-lbl">Member sign-up rate</div></div>
+          </div>
+          <table class="table">
+            <thead><tr><th>Recent announcements</th><th>Category</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+              <tr><td>Fuel dock closed Thursday</td><td>Maintenance</td><td><span class="status-pill sent">Sent</span></td><td>Jul 19</td></tr>
+              <tr><td>Summer boater potluck — Aug 2</td><td>Community</td><td><span class="status-pill sent">Sent</span></td><td>Jul 17</td></tr>
+              <tr><td>Q3 dock inspection notice</td><td>General</td><td><span class="status-pill scheduled">Scheduled</span></td><td>Jul 24</td></tr>
+              <tr><td>Winter storage sign-up opens</td><td>General</td><td><span class="status-pill new">Draft</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAFF MEMBERS + CLAIM QUEUE -->
+  <div class="frame-block">
+    <div class="frame-label">Members &amp; claim requests</div>
+    <div class="browser">
+      <div class="browser-bar"><div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-url">staff.cleat.app/members</div></div>
+      <div class="staff-shell">
+        <div class="staff-nav">
+          <div class="staff-brand">Cleat</div>
+          <div class="staff-nav-item"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Dashboard</div>
+          <div class="staff-nav-item"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Announcements</div>
+          <div class="staff-nav-item active"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg>Members</div>
+          <div class="staff-nav-item" style="opacity:0.4;"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Issues (Phase 2)</div>
+        </div>
+        <div class="staff-main">
+          <div class="staff-title">Members</div>
+          <div class="staff-sub">142 ACTIVE · 5 VISITING THIS WEEK · 3 PENDING VERIFICATION</div>
+          <table class="table">
+            <thead><tr><th>Member</th><th>Usage</th><th>Slip</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><span class="member-row-avatar">RT</span>Rosa T.</td><td>Liveaboard</td><td>G14</td><td><span class="status-pill sent">Verified</span></td></tr>
+              <tr><td><span class="member-row-avatar">JM</span>Jordan M.</td><td>Weekend &amp; seasonal</td><td>F08</td><td><span class="status-pill sent">Verified</span></td></tr>
+              <tr><td><span class="member-row-avatar">AR</span>Alex R.</td><td>Visiting from Fairhaven</td><td>Guest dock 3</td><td><span class="status-pill scheduled">Visiting · 1 night</span></td></tr>
+              <tr><td><span class="member-row-avatar">DK</span>Dave K.</td><td>Storage only</td><td>E22</td><td><span class="status-pill new">Pending — ID upload</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANNOUNCEMENT COMPOSER -->
+  <div class="frame-block">
+    <div class="frame-label">Create announcement</div>
+    <div class="browser">
+      <div class="browser-bar"><div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-url">staff.cleat.app/announcements/new</div></div>
+      <div class="staff-shell">
+        <div class="staff-nav">
+          <div class="staff-brand">Cleat</div>
+          <div class="staff-nav-item"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Dashboard</div>
+          <div class="staff-nav-item active"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Announcements</div>
+          <div class="staff-nav-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg>Members</div>
+          <div class="staff-nav-item" style="opacity:0.4;"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Issues (Phase 2)</div>
+        </div>
+        <div class="staff-main">
+          <div class="staff-title">New announcement</div>
+          <div class="staff-sub">POSTS TO THE MARINA BOARD, SEPARATE FROM THE COMMUNITY BOARD</div>
+          <div class="composer">
+            <div class="comp-field"><div class="comp-label">Category</div><div class="comp-chips"><div class="comp-chip">Emergency</div><div class="comp-chip on">Maintenance</div><div class="comp-chip">Community</div><div class="comp-chip">General</div></div></div>
+            <div class="comp-field"><div class="comp-label">Title</div><div class="comp-input">Q3 dock inspection notice</div></div>
+            <div class="comp-field"><div class="comp-label">Message</div><div class="comp-input tall">Staff will inspect dock cleats and power pedestals on all docks the week of Jul 24. No action needed unless you're contacted directly.</div></div>
+            <div class="comp-actions"><div class="btn-primary">Publish</div><div class="btn-ghost">Save as draft</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="note">CLEAT — FULL APP OVERVIEW · MOCKUP V2 · SHILSHOLE BAY MARINA USED AS SAMPLE DATA</footer>
+
+</body>
+</html>

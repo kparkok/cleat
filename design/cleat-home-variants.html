@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cleat — Home Screen Variants</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2A3D; --navy-deep:#081826; --dock:#C9A876; --seaglass:#5B8C7B;
+    --coral:#E0602F; --paper:#F6F3EC; --paper-dim:#EAE5D8; --ink:#22313A;
+    --ink-soft:#5C6B72; --line:rgba(15,42,61,0.12); --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--navy-deep);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(201,168,118,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(91,140,123,0.10), transparent 45%);
+    font-family:'Inter',sans-serif; color:var(--ink); padding:56px 24px 110px;
+  }
+  .intro{max-width:920px;margin:0 auto 20px;color:var(--paper);}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dock);margin-bottom:14px;}
+  .intro h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(30px,4.2vw,44px);margin:0 0 12px;line-height:1.08;letter-spacing:-0.01em;}
+  .intro p{font-size:15px;line-height:1.6;color:rgba(246,243,236,0.72);max-width:640px;margin:0;}
+
+  .frames{max-width:1400px;margin:60px auto 0;display:flex;flex-wrap:wrap;gap:44px;justify-content:center;}
+  .frame-block{display:flex;flex-direction:column;align-items:center;}
+  .frame-label{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--dock);margin-bottom:4px;text-align:center;}
+  .frame-desc{font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(246,243,236,0.5);margin-bottom:16px;text-align:center;max-width:280px;line-height:1.6;}
+
+  .phone{width:300px;height:640px;background:var(--navy-deep);border-radius:44px;padding:12px;box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);position:relative;}
+  .screen{width:100%;height:100%;background:var(--paper);border-radius:34px;overflow:hidden;display:flex;flex-direction:column;position:relative;}
+  .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:var(--navy-deep);border-radius:14px;z-index:50;}
+  .statusbar{height:44px;flex-shrink:0;position:absolute;top:0;left:0;right:0;z-index:30;}
+  .statusbar.dark::before{content:'';}
+  .content{flex:1;overflow-y:auto;scrollbar-width:none;}
+  .content::-webkit-scrollbar{display:none;}
+
+  .tabbar{height:60px;flex-shrink:0;background:var(--white);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding-bottom:6px;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-soft);}
+  .tab svg{width:18px;height:18px;stroke:var(--ink-soft);fill:none;stroke-width:1.7;}
+  .tab.active{color:var(--navy);}
+  .tab.active svg{stroke:var(--navy);}
+  .tab span{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.03em;}
+
+  .section-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);padding:16px 20px 8px;}
+
+  /* ===== VARIANT 1: Hero + Tide strip ===== */
+  .hero{
+    height:190px; position:relative; overflow:hidden;
+    background:
+      linear-gradient(180deg, rgba(8,24,38,0.1) 0%, rgba(8,24,38,0.75) 100%),
+      linear-gradient(180deg, #4A7A8C 0%, #6B9CAA 40%, #A8C4C9 70%, #C9D8D4 100%);
+  }
+  .hero-docks{position:absolute; bottom:0; left:0; right:0; height:70px;}
+  .hero-docks svg{width:100%;height:100%;}
+  .hero-text{position:absolute; bottom:14px; left:20px; z-index:5;}
+  .hero-text .hn{font-family:'Fraunces',serif;color:var(--white);font-size:21px;font-weight:600;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
+  .hero-text .hs{font-family:'Space Mono',monospace;color:var(--dock);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
+  .sounding-strip{background:var(--navy); padding:12px 20px;}
+  .sounding-row{display:flex;justify-content:space-between;}
+  .sounding-item .val{font-family:'Space Mono',monospace;font-size:14px;color:var(--paper);font-weight:700;}
+  .sounding-item .lbl{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;color:rgba(246,243,236,0.5);margin-top:2px;}
+  .sounding-item .val.accent{color:var(--dock);}
+
+  .announce-hero{margin:16px 20px 0; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; gap:10px; align-items:flex-start;}
+  .announce-hero .dot{width:8px;height:8px;border-radius:50%;background:var(--coral);margin-top:5px;flex-shrink:0;}
+  .announce-hero .at{font-size:13.5px;font-weight:600;color:var(--navy);}
+  .announce-hero .ab{font-size:11.5px;color:var(--ink-soft);margin-top:2px;line-height:1.4;}
+
+  .quick-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px 6px;}
+  .quick-btn2{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:14px 12px;display:flex;flex-direction:column;gap:8px;}
+  .quick-btn2 .qicon{width:26px;height:26px;border-radius:7px;background:var(--navy);display:flex;align-items:center;justify-content:center;}
+  .quick-btn2 .qicon svg{width:13px;height:13px;stroke:var(--dock);}
+  .quick-btn2 .qlabel{font-size:12.5px;font-weight:600;color:var(--navy);}
+
+  .info-link{margin:6px 20px 16px; display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--paper-dim); border-radius:10px;}
+  .info-link .il-t{font-size:12px;font-weight:600;color:var(--navy);}
+  .info-link .il-s{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--ink-soft);margin-top:2px;}
+  .info-link svg{width:14px;height:14px;stroke:var(--ink-soft);fill:none;stroke-width:2;}
+
+  /* ===== VARIANT 2: Minimal dashboard ===== */
+  .min-header{padding:50px 20px 18px;background:var(--navy);color:var(--paper);}
+  .min-header .mn{font-family:'Fraunces',serif;font-size:20px;font-weight:600;}
+  .min-header .ms{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--dock);margin-top:3px;}
+
+  .announce-min{margin:18px 20px 0; padding-bottom:16px; border-bottom:1px solid var(--line);}
+  .announce-min .am-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--coral);font-weight:700;margin-bottom:6px;}
+  .announce-min .am-t{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--navy);margin-bottom:5px;line-height:1.25;}
+  .announce-min .am-b{font-size:12.5px;color:var(--ink-soft);line-height:1.55;}
+
+  .quick-row-min{display:flex;gap:10px;padding:18px 20px 6px;}
+  .quick-min{flex:1;text-align:center;padding:16px 10px;background:var(--white);border:1px solid var(--line);border-radius:12px;}
+  .quick-min .qicon{width:28px;height:28px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
+  .quick-min .qicon svg{width:14px;height:14px;stroke:var(--dock);}
+  .quick-min .qlabel{font-size:11.5px;font-weight:600;color:var(--navy);}
+
+  .info-btn{margin:20px 20px 0; text-align:center; padding:13px; border:1.5px solid var(--line); border-radius:10px; color:var(--ink-soft); font-size:12px; font-weight:600;}
+
+  /* ===== VARIANT 3: Photo-forward ===== */
+  .hero-big{
+    height:280px; position:relative; overflow:hidden;
+    background:
+      linear-gradient(180deg, rgba(8,24,38,0) 0%, rgba(8,24,38,0.15) 55%, rgba(8,24,38,0.92) 100%),
+      linear-gradient(200deg, #3D6B7D 0%, #5A8C9A 35%, #8FB4B8 65%, #D4C89A 100%);
+  }
+  .hero-big-docks{position:absolute; bottom:0; left:0; right:0; height:100px;}
+  .hero-big-docks svg{width:100%;height:100%;}
+  .hero-big-content{position:absolute; bottom:16px; left:20px; right:20px; z-index:5;}
+  .hero-big-content .hn{font-family:'Fraunces',serif;color:var(--white);font-size:23px;font-weight:600;text-shadow:0 2px 10px rgba(0,0,0,0.35);}
+  .hero-big-content .hs{font-family:'Space Mono',monospace;color:var(--dock);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;margin-top:3px;}
+  .hero-big-tide{display:flex;gap:16px;margin-top:12px;}
+  .hero-big-tide .ht-item .v{font-family:'Space Mono',monospace;color:var(--white);font-size:13px;font-weight:700;}
+  .hero-big-tide .ht-item .l{font-family:'Space Mono',monospace;color:rgba(246,243,236,0.6);font-size:8px;letter-spacing:0.05em;text-transform:uppercase;}
+
+  .content-below{padding-top:16px;}
+  .announce-pf{margin:0 20px 12px; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:13px 14px;}
+  .announce-pf .ap-top{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+  .announce-pf .dot{width:6px;height:6px;border-radius:50%;background:var(--coral);}
+  .announce-pf .ap-lbl{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--coral);font-weight:700;}
+  .announce-pf .ap-t{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:3px;}
+  .announce-pf .ap-b{font-size:11.5px;color:var(--ink-soft);line-height:1.5;}
+
+  .row-compact{margin:0 20px 10px; display:flex; align-items:center; gap:12px; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:11px 13px;}
+  .row-compact .rc-icon{width:30px;height:30px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .row-compact .rc-icon svg{width:14px;height:14px;stroke:var(--dock);}
+  .row-compact .rc-t{font-size:12.5px;font-weight:600;color:var(--navy);}
+  .row-compact .rc-s{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-soft);margin-top:1px;}
+  .row-compact .rc-arrow{margin-left:auto;}
+  .row-compact .rc-arrow svg{width:13px;height:13px;stroke:var(--ink-soft);fill:none;stroke-width:2;}
+
+  footer.note{max-width:900px;margin:64px auto 0;color:rgba(246,243,236,0.5);font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="eyebrow">Cleat · Home Screen · Three Directions</div>
+  <h1>Pick the one that feels right.</h1>
+  <p>All three keep Home as a fast dashboard, not a second feed — the difference is how much visual presence the marina itself gets, and how compact the reference info is.</p>
+</div>
+
+<div class="frames">
+
+  <!-- VARIANT 1 -->
+  <div class="frame-block">
+    <div class="frame-label">A — Hero banner + tide strip</div>
+    <div class="frame-desc">Compact photo banner, tide/wind data restored, one urgent announcement, two focused quick actions, info tucked into a single link row</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="content">
+        <div class="hero">
+          <div class="hero-docks">
+            <svg viewBox="0 0 300 70" preserveAspectRatio="none">
+              <rect x="0" y="30" width="300" height="4" fill="#C9A876" opacity="0.85"/>
+              <rect x="20" y="0" width="4" height="70" fill="#0F2A3D" opacity="0.5"/>
+              <rect x="90" y="0" width="4" height="70" fill="#0F2A3D" opacity="0.5"/>
+              <rect x="180" y="0" width="4" height="70" fill="#0F2A3D" opacity="0.5"/>
+              <rect x="260" y="0" width="4" height="70" fill="#0F2A3D" opacity="0.5"/>
+              <path d="M40 45 q15 -10 30 0 l0 15 l-30 0 Z" fill="#F6F3EC" opacity="0.85"/>
+              <path d="M150 40 q18 -12 36 0 l0 18 l-36 0 Z" fill="#F6F3EC" opacity="0.85"/>
+            </svg>
+          </div>
+          <div class="hero-text"><div class="hn">Shilshole Bay Marina</div><div class="hs">Dock G · Slip 14</div></div>
+        </div>
+        <div class="sounding-strip">
+          <div class="sounding-row">
+            <div class="sounding-item"><div class="val">6.2 ft</div><div class="lbl">Tide, rising</div></div>
+            <div class="sounding-item"><div class="val accent">62°F</div><div class="lbl">Water temp</div></div>
+            <div class="sounding-item"><div class="val">14 kt NW</div><div class="lbl">Wind</div></div>
+          </div>
+        </div>
+        <div class="announce-hero">
+          <div class="dot"></div>
+          <div><div class="at">Fuel dock closed Thursday</div><div class="ab">Scheduled pump maintenance, 8am–2pm. Fairwater fuel dock stays open.</div></div>
+        </div>
+        <div class="quick-row2">
+          <div class="quick-btn2"><div class="qicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><div class="qlabel">Announcements</div></div>
+          <div class="quick-btn2"><div class="qicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M4 21c1-4 5-6 8-6s7 2 8 6"/></svg></div><div class="qlabel">Contacts</div></div>
+        </div>
+        <div class="info-link">
+          <div><div class="il-t">Marina office</div><div class="il-s">Open today, 8am–5pm</div></div>
+          <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab active"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- VARIANT 2 -->
+  <div class="frame-block">
+    <div class="frame-label">B — Minimal, text-first</div>
+    <div class="frame-desc">No imagery at all — leans entirely on typography and whitespace, announcement reads like a headline, info reduced to a single tappable line</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="content">
+        <div class="min-header"><div class="mn">Shilshole Bay Marina</div><div class="ms">Dock G · Slip 14</div></div>
+        <div class="announce-min">
+          <div class="am-lbl">● Latest — Maintenance</div>
+          <div class="am-t">Fuel dock closed Thursday</div>
+          <div class="am-b">Scheduled pump maintenance, 8am–2pm. Fairwater fuel dock stays open in the meantime.</div>
+        </div>
+        <div class="quick-row-min">
+          <div class="quick-min"><div class="qicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><div class="qlabel">Announcements</div></div>
+          <div class="quick-min"><div class="qicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M4 21c1-4 5-6 8-6s7 2 8 6"/></svg></div><div class="qlabel">Contacts</div></div>
+        </div>
+        <div class="info-btn">Marina office · Open today, 8am–5pm</div>
+      </div>
+      <div class="tabbar">
+        <div class="tab active"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- VARIANT 3 -->
+  <div class="frame-block">
+    <div class="frame-label">C — Photo-forward</div>
+    <div class="frame-desc">Large hero with tide data overlaid directly on the image, everything below condensed into compact single-line rows for maximum photo presence</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="content">
+        <div class="hero-big">
+          <div class="hero-big-docks">
+            <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+              <rect x="0" y="40" width="300" height="5" fill="#C9A876" opacity="0.9"/>
+              <rect x="15" y="0" width="5" height="100" fill="#0F2A3D" opacity="0.55"/>
+              <rect x="70" y="0" width="5" height="100" fill="#0F2A3D" opacity="0.55"/>
+              <rect x="140" y="0" width="5" height="100" fill="#0F2A3D" opacity="0.55"/>
+              <rect x="210" y="0" width="5" height="100" fill="#0F2A3D" opacity="0.55"/>
+              <rect x="275" y="0" width="5" height="100" fill="#0F2A3D" opacity="0.55"/>
+              <path d="M25 58 q18 -12 36 0 l0 20 l-36 0 Z" fill="#F6F3EC" opacity="0.9"/>
+              <path d="M95 52 q20 -14 40 0 l0 24 l-40 0 Z" fill="#F6F3EC" opacity="0.9"/>
+              <path d="M225 55 q18 -12 36 0 l0 20 l-36 0 Z" fill="#F6F3EC" opacity="0.9"/>
+            </svg>
+          </div>
+          <div class="hero-big-content">
+            <div class="hn">Shilshole Bay Marina</div>
+            <div class="hs">Dock G · Slip 14</div>
+            <div class="hero-big-tide">
+              <div class="ht-item"><div class="v">6.2 ft</div><div class="l">Tide</div></div>
+              <div class="ht-item"><div class="v">62°F</div><div class="l">Water</div></div>
+              <div class="ht-item"><div class="v">14 kt NW</div><div class="l">Wind</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="content-below">
+          <div class="announce-pf">
+            <div class="ap-top"><div class="dot"></div><div class="ap-lbl">Maintenance</div></div>
+            <div class="ap-t">Fuel dock closed Thursday</div>
+            <div class="ap-b">Scheduled pump maintenance, 8am–2pm. Fairwater fuel dock stays open.</div>
+          </div>
+          <div class="row-compact">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+            <div><div class="rc-t">Announcements</div><div class="rc-s">3 new this week</div></div>
+            <div class="rc-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="row-compact">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M4 21c1-4 5-6 8-6s7 2 8 6"/></svg></div>
+            <div><div class="rc-t">Contacts</div><div class="rc-s">Office, ops, emergency</div></div>
+            <div class="rc-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="row-compact">
+            <div class="rc-icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.5 7-11a7 7 0 1 0-14 0c0 4.5 7 11 7 11Z"/></svg></div>
+            <div><div class="rc-t">Marina office</div><div class="rc-s">Open today, 8am–5pm</div></div>
+            <div class="rc-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab active"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<footer class="note">CLEAT — HOME SCREEN VARIANTS · MOCKUP V1 · SHILSHOLE BAY MARINA USED AS SAMPLE DATA</footer>
+
+</body>
+</html>
