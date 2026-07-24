@@ -139,3 +139,73 @@ export function IssuesIcon(props: IconProps) {
     </Base>
   );
 }
+
+// ---- Amenity icons ----
+
+export function FuelIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3 6h18M3 12h18M3 18h18" />
+    </Base>
+  );
+}
+
+export function ClockIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </Base>
+  );
+}
+
+export function ShowerIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="8" width="18" height="10" rx="2" />
+      <path d="M7 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+    </Base>
+  );
+}
+
+export function WifiIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M5 12h14M5 12a7 7 0 0 1 14 0M5 12a7 7 0 0 0 14 0" />
+    </Base>
+  );
+}
+
+export function EvChargingIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="4" y="7" width="16" height="10" rx="2" />
+      <path d="M20 10h2v4h-2" />
+    </Base>
+  );
+}
+
+export function LaundryIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M4 10h16" />
+    </Base>
+  );
+}
+
+export function IceIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 2v20M2 12h20" />
+    </Base>
+  );
+}
+
+export function DogAreaIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 21v-7a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v7" />
+    </Base>
+  );
+}

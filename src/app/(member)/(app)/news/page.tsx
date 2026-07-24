@@ -11,7 +11,8 @@ import {
   PlusIcon,
   ReplyIcon,
 } from "@/components/icons";
-import { announcements, communityPosts, currentMarina, pinnedPosts } from "@/lib/data";
+import { useMarina } from "@/components/member/MarinaProvider";
+import { announcements, communityPosts, pinnedPosts } from "@/lib/data";
 import { ANNOUNCEMENT_CATEGORY_LABELS, type AnnouncementCategory } from "@/lib/types";
 
 type Board = "marina" | "community";
@@ -29,12 +30,13 @@ const CATEGORY_CLASSNAMES: Record<AnnouncementCategory, string> = {
 };
 
 export default function NewsPage() {
+  const { activeMarina } = useMarina();
   const [board, setBoard] = useState<Board>("marina");
   const posted = announcements.filter((a) => a.status === "sent");
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <AppHeader title="Announcements" subtitle={currentMarina.name} />
+      <AppHeader title="Announcements" subtitle={activeMarina.name} />
       <SegmentedToggle value={board} onChange={setBoard} options={BOARD_OPTIONS} />
 
       {board === "marina" ? (

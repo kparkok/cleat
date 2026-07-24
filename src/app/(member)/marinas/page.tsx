@@ -3,27 +3,40 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeftIcon, MarinaIcon, SearchIcon } from "@/components/icons";
-import { marinaSearchResults } from "@/lib/data";
-import type { MarinaSearchResult } from "@/lib/types";
+import { useMarina } from "@/components/member/MarinaProvider";
+import { sampleMarinas } from "@/lib/data";
+import type { Marina } from "@/lib/types";
 
 type Membership = "member" | "visiting";
 
 export default function MarinasPage() {
   const router = useRouter();
+  const { activeMarina, memberMarinas, switchMarina } = useMarina();
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<MarinaSearchResult | null>(null);
+  const [selected, setSelected] = useState<Marina | null>(null);
   const [membership, setMembership] = useState<Membership>("visiting");
 
-  const results = marinaSearchResults.filter((m) =>
+  const membershipByMarinaId = new Map(memberMarinas.map((m) => [m.marinaId, m.role]));
+
+  // Only the marina you're currently on is hidden — everything else stays
+  // selectable, including marinas you already belong to, so switching back
+  // to a marina you've moved away from (e.g. your original home) still works.
+  const candidates = sampleMarinas.filter((m) => m.id !== activeMarina.id);
+  const results = candidates.filter((m) =>
     m.name.toLowerCase().includes(query.toLowerCase()),
   );
 
-  function openMarina(marina: MarinaSearchResult) {
+  function openMarina(marina: Marina) {
     setSelected(marina);
-    setMembership("visiting");
+    // Default to whatever relationship you already have with this marina,
+    // rather than always assuming "visiting" for a marina you're a member of.
+    setMembership(membershipByMarinaId.get(marina.id) === "home" ? "member" : "visiting");
   }
 
   function confirm() {
+    if (selected) {
+      switchMarina(selected.id, membership);
+    }
     setSelected(null);
     router.push("/home");
   }
@@ -59,25 +72,46 @@ export default function MarinasPage() {
             key={marina.id}
             type="button"
             onClick={() => openMarina(marina)}
-            className="mb-2.5 flex w-[calc(100%-40px)] items-center gap-[11px] rounded-xl border border-line bg-white p-3 text-left transition-colors hover:border-dock mx-5"
+            className="mx-5 mb-2.5 flex w-[calc(100%-40px)] flex-col rounded-xl border border-line bg-white p-3 text-left transition-colors hover:border-dock"
           >
-            <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] bg-paper-dim">
-              <MarinaIcon className="h-4 w-4 text-navy" />
-            </span>
-            <div>
-              <div className="text-[12.5px] font-semibold text-navy">
-                {marina.name}
-              </div>
-              <div className="u-mono mt-[3px] flex items-center gap-1.5 text-[9px] text-ink-soft">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    marina.status === "verified" ? "bg-seaglass" : "bg-dock"
-                  }`}
-                />
-                {marina.status === "verified" ? "Verified" : "Community"} ·{" "}
-                {marina.location}
+            <div className="flex items-center gap-[11px]">
+              <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] bg-paper-dim">
+                <MarinaIcon className="h-4 w-4 text-navy" />
+              </span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12.5px] font-semibold text-navy">
+                    {marina.name}
+                  </span>
+                  {membershipByMarinaId.get(marina.id) && (
+                    <span className="u-mono rounded-full bg-dock/20 px-[6px] py-[1px] text-[7.5px] font-bold tracking-[0.03em] text-[#8A6A2E]">
+                      {membershipByMarinaId.get(marina.id) === "home" ? "Home" : "Visiting"}
+                    </span>
+                  )}
+                </div>
+                <div className="u-mono mt-[3px] flex items-center gap-1.5 text-[9px] text-ink-soft">
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      marina.status === "verified" ? "bg-seaglass" : "bg-dock"
+                    }`}
+                  />
+                  {marina.status === "verified" ? "Verified" : "Community"} ·{" "}
+                  {marina.location}
+                </div>
               </div>
             </div>
+            {marina.amenities.length > 0 && (
+              <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-line pt-2.5">
+                {marina.amenities.slice(0, 4).map((amenity) => (
+                  <span
+                    key={amenity.id}
+                    className="u-mono rounded-lg bg-paper-dim px-2 py-1 text-[8.5px] text-ink-soft"
+                  >
+                    {amenity.label}
+                  </span>
+                ))}
+              </div>
+            )}
           </button>
         ))}
         {results.length === 0 && (

@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { HomeIcon, NewsIcon, UserIcon } from "@/components/icons";
 
 const TABS = [
-  { href: "/home", label: "Home", Icon: HomeIcon, match: ["/home"] },
+  // Marina profile is reached from Home's info-link, so it keeps this tab active too.
+  { href: "/home", label: "Home", Icon: HomeIcon, match: ["/home", "/marina"] },
   { href: "/news", label: "News", Icon: NewsIcon, match: ["/news"] },
   // Contacts lives under the "You" area, so it keeps this tab active too.
   { href: "/you", label: "You", Icon: UserIcon, match: ["/you", "/contacts"] },

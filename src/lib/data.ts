@@ -5,33 +5,172 @@ import type {
   Announcement,
   CommunityPost,
   Contact,
-  CurrentMarina,
   DashboardStat,
-  MarinaSearchResult,
+  Marina,
+  MemberMarinaMembership,
   PinnedPost,
   StaffMember,
 } from "./types";
 
-export const currentMarina: CurrentMarina = {
-  id: "shilshole",
-  name: "Shilshole Bay Marina",
-  location: "Seattle, WA",
-  slip: "Dock G · Slip 14",
-  // No marina has uploaded a custom banner yet — every marina defaults to the
-  // gradient banner until staff upload one.
-  bannerImageUrl: undefined,
-  conditions: {
-    tide: "6.2 ft",
-    tideTrend: "rising",
-    waterTemp: "62°F",
-    wind: "14 kt NW",
+/**
+ * Every marina a member could have open — their home marina plus anything
+ * findable in the marina switcher. All share the same full `Marina` shape,
+ * so switching is just pointing at a different entry here (see
+ * MarinaProvider), not fetching differently-shaped data.
+ */
+export const sampleMarinas: Marina[] = [
+  {
+    id: "shilshole",
+    name: "Shilshole Bay Marina",
+    location: "Seattle, WA",
+    slip: "Dock G · Slip 14",
+    // No marina has uploaded a custom banner yet — every marina defaults to
+    // the gradient banner until staff upload one.
+    bannerImageUrl: undefined,
+    status: "verified",
+    conditions: {
+      tide: "6.2 ft",
+      tideTrend: "rising",
+      waterTemp: "62°F",
+      wind: "14 kt NW",
+    },
+    hours: {
+      rows: [
+        { label: "Today (Thu)", time: "8:00 AM – 5:00 PM", isToday: true },
+        { label: "Fri – Sun", time: "8:00 AM – 6:00 PM" },
+        { label: "Mon – Wed", time: "8:00 AM – 5:00 PM" },
+      ],
+      fuelDock: "7:00 AM – 7:00 PM",
+    },
+    amenities: [
+      { id: "fuel", label: "Fuel dock", icon: "fuel", note: "Gas & diesel", verified: true },
+      { id: "pump-out", label: "Pump-out", icon: "pumpOut", note: "24 hours", verified: true },
+      { id: "showers", label: "Showers", icon: "showers", note: "Building 2", verified: true },
+      { id: "wifi", label: "WiFi", icon: "wifi", note: "Guest network", verified: true },
+      { id: "ev-charging", label: "EV charging", icon: "evCharging", note: "2 stations", verified: true },
+      { id: "laundry", label: "Laundry", icon: "laundry", note: "Coin-op", verified: true },
+      { id: "ice", label: "Ice machine", icon: "ice", note: "Near Dock C", verified: false },
+      { id: "dog-area", label: "Dog area", icon: "dogArea", note: "By the pavilion", verified: false },
+    ],
+    office: {
+      hours: "Open today, 8am – 5pm",
+      phone: "(206) 555-0148",
+      location: "Dock A, Building 1",
+    },
   },
-  office: {
-    hours: "Open today, 8am – 5pm",
-    phone: "(206) 555-0148",
-    location: "Dock A, Building 1",
+  {
+    id: "fairhaven",
+    name: "Fairhaven Marina",
+    location: "Bellingham, WA",
+    slip: "Guest dock 2",
+    bannerImageUrl: undefined,
+    status: "verified",
+    conditions: {
+      tide: "4.8 ft",
+      tideTrend: "falling",
+      waterTemp: "58°F",
+      wind: "9 kt SW",
+    },
+    hours: {
+      rows: [
+        { label: "Today (Thu)", time: "7:00 AM – 6:00 PM", isToday: true },
+        { label: "Fri – Sun", time: "7:00 AM – 7:00 PM" },
+        { label: "Mon – Wed", time: "7:00 AM – 6:00 PM" },
+      ],
+      fuelDock: "8:00 AM – 6:00 PM",
+    },
+    amenities: [
+      { id: "fuel", label: "Fuel dock", icon: "fuel", note: "Gas & diesel", verified: true },
+      { id: "pump-out", label: "Pump-out", icon: "pumpOut", note: "24 hours", verified: true },
+      { id: "guest-dock", label: "Guest dock", icon: "guestDock", note: "Short & long stay", verified: true },
+      { id: "wifi", label: "WiFi", icon: "wifi", note: "Guest network", verified: true },
+    ],
+    office: {
+      hours: "Open today, 7am – 6pm",
+      phone: "(360) 555-0122",
+      location: "Harbor building",
+    },
   },
-};
+  {
+    id: "elliott-bay",
+    name: "Elliott Bay Marina",
+    location: "Seattle, WA",
+    slip: "Guest dock 5",
+    bannerImageUrl: undefined,
+    status: "verified",
+    conditions: {
+      tide: "5.5 ft",
+      tideTrend: "rising",
+      waterTemp: "61°F",
+      wind: "11 kt N",
+    },
+    hours: {
+      rows: [
+        { label: "Today (Thu)", time: "8:00 AM – 5:00 PM", isToday: true },
+        { label: "Fri – Sun", time: "8:00 AM – 6:00 PM" },
+        { label: "Mon – Wed", time: "8:00 AM – 5:00 PM" },
+      ],
+      fuelDock: "7:00 AM – 6:00 PM",
+    },
+    amenities: [
+      { id: "fuel", label: "Fuel dock", icon: "fuel", note: "Gas & diesel", verified: true },
+      { id: "pump-out", label: "Pump-out", icon: "pumpOut", note: "24 hours", verified: true },
+      { id: "laundry", label: "Laundry", icon: "laundry", note: "Coin-op", verified: true },
+      { id: "ev-charging", label: "EV charging", icon: "evCharging", note: "4 stations", verified: true },
+    ],
+    office: {
+      hours: "Open today, 8am – 5pm",
+      phone: "(206) 555-0133",
+      location: "Marina office, Pier D",
+    },
+  },
+  {
+    id: "port-townsend",
+    name: "Port Townsend Boat Haven",
+    location: "Port Townsend, WA",
+    slip: "Guest dock 1",
+    bannerImageUrl: undefined,
+    // Community-run, unclaimed by staff — nobody's around to confirm
+    // amenities, so everything here is member-submitted.
+    status: "community",
+    conditions: {
+      tide: "3.9 ft",
+      tideTrend: "rising",
+      waterTemp: "56°F",
+      wind: "13 kt W",
+    },
+    hours: {
+      rows: [
+        { label: "Today (Thu)", time: "Unstaffed", isToday: true },
+        { label: "Fri – Sun", time: "Unstaffed" },
+        { label: "Mon – Wed", time: "Unstaffed" },
+      ],
+      fuelDock: "Not available",
+    },
+    amenities: [
+      { id: "guest-dock", label: "Guest dock", icon: "guestDock", note: "First come, first served", verified: false },
+      { id: "showers", label: "Showers", icon: "showers", note: "Near the boat launch", verified: false },
+    ],
+    office: {
+      hours: "Unstaffed — community-run",
+      phone: "(360) 555-0177",
+      location: "N/A",
+    },
+  },
+];
+
+/** Seed membership: every new member starts with just their home marina. */
+export const defaultMemberMarinas: MemberMarinaMembership[] = [
+  { marinaId: "shilshole", role: "home" },
+];
+
+/**
+ * The marina this staff portal manages. Staff sessions are separate from a
+ * member's marina-switching state — a staff account always manages its own
+ * marina, so this is a fixed lookup, not reactive state.
+ */
+export const staffManagedMarina =
+  sampleMarinas.find((m) => m.id === "shilshole") ?? sampleMarinas[0];
 
 export const pinnedPosts: PinnedPost[] = [
   {
@@ -135,27 +274,6 @@ export const contacts: Contact[] = [
     role: "24 hours",
     phone: "(206) 555-0199",
     emergency: true,
-  },
-];
-
-export const marinaSearchResults: MarinaSearchResult[] = [
-  {
-    id: "fairhaven",
-    name: "Fairhaven Marina",
-    location: "Bellingham, WA",
-    status: "verified",
-  },
-  {
-    id: "elliott-bay",
-    name: "Elliott Bay Marina",
-    location: "Seattle, WA",
-    status: "verified",
-  },
-  {
-    id: "port-townsend",
-    name: "Port Townsend Boat Haven",
-    location: "Port Townsend, WA",
-    status: "community",
   },
 ];
 

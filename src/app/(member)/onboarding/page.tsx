@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeftIcon } from "@/components/icons";
-import { currentMarina } from "@/lib/data";
+import { useMarina } from "@/components/member/MarinaProvider";
 import type { UsageType } from "@/lib/types";
 
 const OPTIONS: { value: UsageType; title: string; sub: string }[] = [
@@ -26,6 +26,7 @@ const OPTIONS: { value: UsageType; title: string; sub: string }[] = [
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { activeMarina } = useMarina();
   const [selected, setSelected] = useState<UsageType>("weekend");
 
   return (
@@ -42,7 +43,7 @@ export default function OnboardingPage() {
       <h2 className="mb-2 font-serif text-[21px] font-semibold leading-[1.18] text-paper">
         How do you use
         <br />
-        {currentMarina.name}?
+        {activeMarina.name}?
       </h2>
       <p className="mb-5 text-xs leading-relaxed text-paper/60">
         No wrong answer — you can change this anytime.

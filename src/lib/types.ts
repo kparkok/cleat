@@ -72,13 +72,6 @@ export interface Contact {
   emergency?: boolean;
 }
 
-export interface MarinaSearchResult {
-  id: string;
-  name: string;
-  location: string;
-  status: "verified" | "community";
-}
-
 /** Live tide/wind/water conditions shown in the home screen's sounding strip. */
 export interface MarinaConditions {
   tide: string;
@@ -87,19 +80,72 @@ export interface MarinaConditions {
   wind: string;
 }
 
-export interface CurrentMarina {
+/** One row of the marina profile's hours card, e.g. "Fri – Sun" / "8:00 AM – 6:00 PM". */
+export interface MarinaHoursRow {
+  label: string;
+  time: string;
+  isToday?: boolean;
+}
+
+export interface MarinaHours {
+  rows: MarinaHoursRow[];
+  /** Shown as its own row — fuel dock hours often differ from office hours. */
+  fuelDock: string;
+}
+
+/** Icon keys for amenity tiles on the marina profile screen. */
+export type AmenityIconId =
+  | "fuel"
+  | "pumpOut"
+  | "showers"
+  | "wifi"
+  | "evCharging"
+  | "laundry"
+  | "ice"
+  | "dogArea"
+  | "guestDock";
+
+export interface Amenity {
+  id: string;
+  label: string;
+  icon: AmenityIconId;
+  note: string;
+  /** true = staff-confirmed; false = member-submitted, shown with a dashed border. */
+  verified: boolean;
+}
+
+/**
+ * A marina's full profile — used both as "the marina a member currently has
+ * open" and as an entry in the searchable marina directory. Every marina in
+ * `sampleMarinas` has this full shape, so switching marinas is just picking
+ * a different one of these, not fetching a differently-shaped record.
+ */
+export interface Marina {
   id: string;
   name: string;
   location: string;
+  /** This member's slip/dock assignment at this marina. */
   slip: string;
   /** Custom banner uploaded by marina staff. Falls back to the default gradient banner when unset. */
   bannerImageUrl?: string;
+  status: "verified" | "community";
   conditions: MarinaConditions;
+  hours: MarinaHours;
+  amenities: Amenity[];
   office: {
     hours: string;
     phone: string;
     location: string;
   };
+}
+
+/**
+ * One marina a member belongs to — their single "home" marina (where their
+ * boat lives) plus any number of marinas they're just visiting.
+ */
+export interface MemberMarinaMembership {
+  marinaId: string;
+  role: "home" | "visiting";
 }
 
 // ---- Staff side ----
