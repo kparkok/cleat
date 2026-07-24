@@ -20,12 +20,31 @@ export const currentMarina: CurrentMarina = {
   // No marina has uploaded a custom banner yet — every marina defaults to the
   // gradient banner until staff upload one.
   bannerImageUrl: undefined,
+  status: "verified",
   conditions: {
     tide: "6.2 ft",
     tideTrend: "rising",
     waterTemp: "62°F",
     wind: "14 kt NW",
   },
+  hours: {
+    rows: [
+      { label: "Today (Thu)", time: "8:00 AM – 5:00 PM", isToday: true },
+      { label: "Fri – Sun", time: "8:00 AM – 6:00 PM" },
+      { label: "Mon – Wed", time: "8:00 AM – 5:00 PM" },
+    ],
+    fuelDock: "7:00 AM – 7:00 PM",
+  },
+  amenities: [
+    { id: "fuel", label: "Fuel dock", icon: "fuel", note: "Gas & diesel", verified: true },
+    { id: "pump-out", label: "Pump-out", icon: "pumpOut", note: "24 hours", verified: true },
+    { id: "showers", label: "Showers", icon: "showers", note: "Building 2", verified: true },
+    { id: "wifi", label: "WiFi", icon: "wifi", note: "Guest network", verified: true },
+    { id: "ev-charging", label: "EV charging", icon: "evCharging", note: "2 stations", verified: true },
+    { id: "laundry", label: "Laundry", icon: "laundry", note: "Coin-op", verified: true },
+    { id: "ice", label: "Ice machine", icon: "ice", note: "Near Dock C", verified: false },
+    { id: "dog-area", label: "Dog area", icon: "dogArea", note: "By the pavilion", verified: false },
+  ],
   office: {
     hours: "Open today, 8am – 5pm",
     phone: "(206) 555-0148",
@@ -144,18 +163,21 @@ export const marinaSearchResults: MarinaSearchResult[] = [
     name: "Fairhaven Marina",
     location: "Bellingham, WA",
     status: "verified",
+    amenities: ["Fuel dock", "Pump-out", "Guest dock", "WiFi"],
   },
   {
     id: "elliott-bay",
     name: "Elliott Bay Marina",
     location: "Seattle, WA",
     status: "verified",
+    amenities: ["Fuel dock", "Pump-out", "Laundry", "EV charging"],
   },
   {
     id: "port-townsend",
     name: "Port Townsend Boat Haven",
     location: "Port Townsend, WA",
     status: "community",
+    amenities: ["Guest dock", "Showers"],
   },
 ];
 

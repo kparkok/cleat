@@ -20,11 +20,20 @@ export function AppHeader({
   );
 }
 
-/** Small mono uppercase section label. */
-export function SectionTitle({ children }: { children: ReactNode }) {
+/** Small mono uppercase section label. Pass `badge` for a trailing pill, e.g. a count. */
+export function SectionTitle({
+  children,
+  badge,
+}: {
+  children: ReactNode;
+  badge?: ReactNode;
+}) {
   return (
-    <div className="u-mono px-5 pb-2 pt-4 text-[10px] tracking-[0.1em] text-ink-soft">
-      {children}
+    <div className="flex items-center gap-2 px-5 pb-2 pt-4">
+      <span className="u-mono text-[10px] tracking-[0.1em] text-ink-soft">
+        {children}
+      </span>
+      {badge}
     </div>
   );
 }

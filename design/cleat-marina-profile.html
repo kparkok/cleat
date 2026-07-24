@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cleat — Marina Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2A3D; --navy-deep:#081826; --dock:#C9A876; --seaglass:#5B8C7B;
+    --coral:#E0602F; --paper:#F6F3EC; --paper-dim:#EAE5D8; --ink:#22313A;
+    --ink-soft:#5C6B72; --line:rgba(15,42,61,0.12); --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--navy-deep);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(201,168,118,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(91,140,123,0.10), transparent 45%);
+    font-family:'Inter',sans-serif; color:var(--ink); padding:56px 24px 110px;
+  }
+  .intro{max-width:920px;margin:0 auto 20px;color:var(--paper);}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dock);margin-bottom:14px;}
+  .intro h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(30px,4.2vw,44px);margin:0 0 12px;line-height:1.08;letter-spacing:-0.01em;}
+  .intro p{font-size:15px;line-height:1.6;color:rgba(246,243,236,0.72);max-width:640px;margin:0;}
+
+  .frames{max-width:1400px;margin:60px auto 0;display:flex;flex-wrap:wrap;gap:44px;justify-content:center;}
+  .frame-block{display:flex;flex-direction:column;align-items:center;}
+  .frame-label{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--dock);margin-bottom:4px;text-align:center;}
+  .frame-desc{font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(246,243,236,0.5);margin-bottom:16px;text-align:center;max-width:280px;line-height:1.6;}
+
+  .phone{width:300px;height:640px;background:var(--navy-deep);border-radius:44px;padding:12px;box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);position:relative;}
+  .screen{width:100%;height:100%;background:var(--paper);border-radius:34px;overflow:hidden;display:flex;flex-direction:column;position:relative;}
+  .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:var(--navy-deep);border-radius:14px;z-index:50;}
+  .statusbar{height:44px;flex-shrink:0;}
+  .content{flex:1;overflow-y:auto;scrollbar-width:none;}
+  .content::-webkit-scrollbar{display:none;}
+
+  /* Marina profile header */
+  .profile-hero{
+    height:130px; position:relative; overflow:hidden;
+    background: linear-gradient(180deg, rgba(8,24,38,0.15) 0%, rgba(8,24,38,0.8) 100%), linear-gradient(180deg, #4A7A8C 0%, #6B9CAA 45%, #B7CDCA 100%);
+  }
+  .profile-back{position:absolute; top:14px; left:14px; z-index:10; width:30px;height:30px;border-radius:8px;background:rgba(8,24,38,0.4);display:flex;align-items:center;justify-content:center;}
+  .profile-back svg{width:14px;height:14px;stroke:var(--paper);}
+  .profile-hero-text{position:absolute; bottom:14px; left:20px;}
+  .profile-hero-text .pn{font-family:'Fraunces',serif;color:var(--white);font-size:19px;font-weight:600;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
+  .profile-hero-text .ps{font-family:'Space Mono',monospace;color:var(--dock);font-size:10px;letter-spacing:0.06em;margin-top:2px;}
+
+  .status-strip{padding:11px 20px; background:var(--navy); display:flex; align-items:center; gap:8px;}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--seaglass);}
+  .status-strip span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:rgba(246,243,236,0.75);font-weight:700;}
+
+  .section-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);padding:16px 20px 8px;}
+  .section-title.with-badge{display:flex;align-items:center;gap:8px;}
+
+  .hours-card{margin:0 20px 12px; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:14px;}
+  .hours-row{display:flex; justify-content:space-between; padding:6px 0; font-size:12.5px;}
+  .hours-row.today{font-weight:700;color:var(--navy);}
+  .hours-row:not(.today){color:var(--ink-soft);}
+  .hours-row + .hours-row{border-top:1px solid var(--line);}
+
+  .amenity-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 20px 6px;}
+  .amenity-tile{background:var(--white); border:1px solid var(--line); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:7px;}
+  .amenity-tile .aicon{width:24px;height:24px;border-radius:7px;background:var(--navy);display:flex;align-items:center;justify-content:center;}
+  .amenity-tile .aicon svg{width:12px;height:12px;stroke:var(--dock);}
+  .amenity-tile .alabel{font-size:11.5px;font-weight:600;color:var(--navy);}
+  .amenity-tile .asub{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--ink-soft);}
+  .amenity-tile.unverified{border-style:dashed; border-color:var(--dock);}
+  .amenity-tile.unverified .aicon{background:var(--paper-dim);}
+  .amenity-tile.unverified .aicon svg{stroke:var(--navy);}
+
+  .verified-badge{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.04em;text-transform:uppercase;color:var(--seaglass);font-weight:700;background:rgba(91,140,123,0.12);padding:2px 7px;border-radius:10px;}
+  .submitted-badge{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.03em;text-transform:uppercase;color:#8A6A2E;font-weight:700;background:rgba(201,168,118,0.22);padding:2px 7px;border-radius:10px;}
+
+  .add-amenity{margin:0 20px 16px; text-align:center; padding:12px; border:1.5px dashed var(--line); border-radius:12px; color:var(--ink-soft); font-size:11.5px; font-weight:600;}
+  .add-amenity svg{width:13px;height:13px;stroke:var(--ink-soft);vertical-align:-2px;margin-right:5px;}
+
+  .tabbar{height:60px;flex-shrink:0;background:var(--white);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding-bottom:6px;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-soft);}
+  .tab svg{width:18px;height:18px;stroke:var(--ink-soft);fill:none;stroke-width:1.7;}
+  .tab.active{color:var(--navy);}
+  .tab.active svg{stroke:var(--navy);}
+  .tab span{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.03em;}
+
+  /* Search result card w/ amenity preview */
+  .search-header{padding:8px 20px 14px;background:var(--navy);}
+  .search-title{font-family:'Fraunces',serif;color:var(--paper);font-size:18px;font-weight:600;margin-bottom:11px;}
+  .search-box{background:rgba(246,243,236,0.08); border:1px solid rgba(246,243,236,0.18); border-radius:10px; padding:10px 13px; display:flex; align-items:center; gap:9px;}
+  .search-box svg{width:14px;height:14px;stroke:rgba(246,243,236,0.5);fill:none;stroke-width:2;flex-shrink:0;}
+  .search-box span{font-family:'Space Mono',monospace;font-size:11.5px;color:rgba(246,243,236,0.45);}
+  .marina-result2{margin:0 20px 10px; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:13px; }
+  .mr2-top{display:flex; align-items:center; gap:11px; margin-bottom:9px;}
+  .marina-icon{width:34px;height:34px;border-radius:10px;background:var(--paper-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .marina-icon svg{width:16px;height:16px;stroke:var(--navy);fill:none;stroke-width:1.7;}
+  .marina-r-name{font-size:12.5px;font-weight:600;color:var(--navy);}
+  .marina-r-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-soft);margin-top:3px;display:flex;align-items:center;gap:6px;}
+  .status-dot2{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .status-dot2.verified{background:var(--seaglass);}
+  .status-dot2.community{background:var(--dock);}
+  .mr2-amenities{display:flex;gap:6px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--line);}
+  .mini-chip{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--ink-soft);background:var(--paper-dim);padding:4px 8px;border-radius:8px;}
+
+  footer.note{max-width:900px;margin:64px auto 0;color:rgba(246,243,236,0.5);font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="eyebrow">Cleat · Marina Profile · Hours &amp; Amenities</div>
+  <h1>What's here, before you decide.</h1>
+  <p>A lightweight marina profile — hours and amenities, no map rendering required. Verified amenities (confirmed by staff) are visually distinct from ones members have submitted themselves, and it works even for an unclaimed, community-run marina.</p>
+</div>
+
+<div class="frames">
+
+  <!-- MARINA PROFILE -->
+  <div class="frame-block">
+    <div class="frame-label">Marina profile</div>
+    <div class="frame-desc">Reached from the Home info link or a search result — hours, amenities, mix of verified and member-submitted</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="content">
+        <div class="profile-hero">
+          <div class="profile-back"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="profile-hero-text"><div class="pn">Shilshole Bay Marina</div><div class="ps">SEATTLE, WA</div></div>
+        </div>
+        <div class="status-strip"><div class="status-dot"></div><span>Verified · Staff-managed</span></div>
+
+        <div class="section-title">Hours</div>
+        <div class="hours-card">
+          <div class="hours-row today"><span>Today (Thu)</span><span>8:00 AM – 5:00 PM</span></div>
+          <div class="hours-row"><span>Fri – Sun</span><span>8:00 AM – 6:00 PM</span></div>
+          <div class="hours-row"><span>Mon – Wed</span><span>8:00 AM – 5:00 PM</span></div>
+          <div class="hours-row"><span>Fuel dock</span><span>7:00 AM – 7:00 PM</span></div>
+        </div>
+
+        <div class="section-title with-badge">Amenities <span class="verified-badge">6 verified</span></div>
+        <div class="amenity-grid">
+          <div class="amenity-tile"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div><div class="alabel">Fuel dock</div><div class="asub">Gas &amp; diesel</div></div>
+          <div class="amenity-tile"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="alabel">Pump-out</div><div class="asub">24 hours</div></div>
+          <div class="amenity-tile"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="10" rx="2"/><path d="M7 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg></div><div class="alabel">Showers</div><div class="asub">Building 2</div></div>
+          <div class="amenity-tile"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M5 12a7 7 0 0 1 14 0M5 12a7 7 0 0 0 14 0"/></svg></div><div class="alabel">WiFi</div><div class="asub">Guest network</div></div>
+          <div class="amenity-tile"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="10" rx="2"/><path d="M20 10h2v4h-2"/></svg></div><div class="alabel">EV charging</div><div class="asub">2 stations</div></div>
+          <div class="amenity-tile"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16"/></svg></div><div class="alabel">Laundry</div><div class="asub">Coin-op</div></div>
+        </div>
+
+        <div class="section-title with-badge">Also here <span class="submitted-badge">Member-submitted</span></div>
+        <div class="amenity-grid">
+          <div class="amenity-tile unverified"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div><div class="alabel">Ice machine</div><div class="asub">Near Dock C</div></div>
+          <div class="amenity-tile unverified"><div class="aicon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v7"/></svg></div><div class="alabel">Dog area</div><div class="asub">By the pavilion</div></div>
+        </div>
+
+        <div class="add-amenity"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Suggest an amenity</div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>HOME</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>NEWS</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 6-6 8-6s6.5 2 8 6"/></svg><span>YOU</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SEARCH RESULT WITH AMENITY PREVIEW -->
+  <div class="frame-block">
+    <div class="frame-label">Search results, updated</div>
+    <div class="frame-desc">Amenity chips now preview in the marina search list, useful for a visitor deciding where to stop</div>
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"></div>
+      <div class="search-header">
+        <div class="search-title">Find a marina</div>
+        <div class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span>Fairhaven</span></div>
+      </div>
+      <div class="content">
+        <div class="section-title" style="padding-top:14px;">Results</div>
+        <div class="marina-result2">
+          <div class="mr2-top">
+            <div class="marina-icon"><svg viewBox="0 0 24 24"><path d="M12 2 L4 7 L4 15 L12 22 L20 15 L20 7 Z"/></svg></div>
+            <div><div class="marina-r-name">Fairhaven Marina</div><div class="marina-r-meta"><span class="status-dot2 verified"></span>Verified · Bellingham, WA</div></div>
+          </div>
+          <div class="mr2-amenities">
+            <span class="mini-chip">Fuel dock</span>
+            <span class="mini-chip">Pump-out</span>
+            <span class="mini-chip">Guest dock</span>
+            <span class="mini-chip">WiFi</span>
+          </div>
+        </div>
+        <div class="marina-result2">
+          <div class="mr2-top">
+            <div class="marina-icon"><svg viewBox="0 0 24 24"><path d="M12 2 L4 7 L4 15 L12 22 L20 15 L20 7 Z"/></svg></div>
+            <div><div class="marina-r-name">Fairhaven Village Marina</div><div class="marina-r-meta"><span class="status-dot2 community"></span>Community-run · Bellingham, WA</div></div>
+          </div>
+          <div class="mr2-amenities">
+            <span class="mini-chip">Guest dock</span>
+            <span class="mini-chip">Showers</span>
+          </div>
+        </div>
+        <div class="marina-result2">
+          <div class="mr2-top">
+            <div class="marina-icon"><svg viewBox="0 0 24 24"><path d="M12 2 L4 7 L4 15 L12 22 L20 15 L20 7 Z"/></svg></div>
+            <div><div class="marina-r-name">Squalicum Harbor</div><div class="marina-r-meta"><span class="status-dot2 verified"></span>Verified · Bellingham, WA</div></div>
+          </div>
+          <div class="mr2-amenities">
+            <span class="mini-chip">Fuel dock</span>
+            <span class="mini-chip">Pump-out</span>
+            <span class="mini-chip">Laundry</span>
+            <span class="mini-chip">EV charging</span>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<footer class="note">CLEAT — MARINA PROFILE: HOURS &amp; AMENITIES · MOCKUP V1</footer>
+
+</body>
+</html>

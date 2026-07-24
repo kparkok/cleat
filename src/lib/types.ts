@@ -77,6 +77,8 @@ export interface MarinaSearchResult {
   name: string;
   location: string;
   status: "verified" | "community";
+  /** Short amenity labels previewed as chips under the result card. */
+  amenities: string[];
 }
 
 /** Live tide/wind/water conditions shown in the home screen's sounding strip. */
@@ -87,6 +89,39 @@ export interface MarinaConditions {
   wind: string;
 }
 
+/** One row of the marina profile's hours card, e.g. "Fri – Sun" / "8:00 AM – 6:00 PM". */
+export interface MarinaHoursRow {
+  label: string;
+  time: string;
+  isToday?: boolean;
+}
+
+export interface MarinaHours {
+  rows: MarinaHoursRow[];
+  /** Shown as its own row — fuel dock hours often differ from office hours. */
+  fuelDock: string;
+}
+
+/** Icon keys for amenity tiles on the marina profile screen. */
+export type AmenityIconId =
+  | "fuel"
+  | "pumpOut"
+  | "showers"
+  | "wifi"
+  | "evCharging"
+  | "laundry"
+  | "ice"
+  | "dogArea";
+
+export interface Amenity {
+  id: string;
+  label: string;
+  icon: AmenityIconId;
+  note: string;
+  /** true = staff-confirmed; false = member-submitted, shown with a dashed border. */
+  verified: boolean;
+}
+
 export interface CurrentMarina {
   id: string;
   name: string;
@@ -94,7 +129,10 @@ export interface CurrentMarina {
   slip: string;
   /** Custom banner uploaded by marina staff. Falls back to the default gradient banner when unset. */
   bannerImageUrl?: string;
+  status: "verified" | "community";
   conditions: MarinaConditions;
+  hours: MarinaHours;
+  amenities: Amenity[];
   office: {
     hours: string;
     phone: string;

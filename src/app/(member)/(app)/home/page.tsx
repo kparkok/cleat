@@ -52,7 +52,7 @@ export default function HomePage() {
       </div>
 
       <Link
-        href="/contacts"
+        href="/marina"
         className="mx-5 mb-4 mt-1.5 flex items-center justify-between rounded-[10px] bg-paper-dim p-[12px_14px] transition-opacity hover:opacity-80"
       >
         <span>
