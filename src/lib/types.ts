@@ -72,15 +72,6 @@ export interface Contact {
   emergency?: boolean;
 }
 
-export interface MarinaSearchResult {
-  id: string;
-  name: string;
-  location: string;
-  status: "verified" | "community";
-  /** Short amenity labels previewed as chips under the result card. */
-  amenities: string[];
-}
-
 /** Live tide/wind/water conditions shown in the home screen's sounding strip. */
 export interface MarinaConditions {
   tide: string;
@@ -111,7 +102,8 @@ export type AmenityIconId =
   | "evCharging"
   | "laundry"
   | "ice"
-  | "dogArea";
+  | "dogArea"
+  | "guestDock";
 
 export interface Amenity {
   id: string;
@@ -122,10 +114,17 @@ export interface Amenity {
   verified: boolean;
 }
 
-export interface CurrentMarina {
+/**
+ * A marina's full profile — used both as "the marina a member currently has
+ * open" and as an entry in the searchable marina directory. Every marina in
+ * `sampleMarinas` has this full shape, so switching marinas is just picking
+ * a different one of these, not fetching a differently-shaped record.
+ */
+export interface Marina {
   id: string;
   name: string;
   location: string;
+  /** This member's slip/dock assignment at this marina. */
   slip: string;
   /** Custom banner uploaded by marina staff. Falls back to the default gradient banner when unset. */
   bannerImageUrl?: string;
@@ -138,6 +137,15 @@ export interface CurrentMarina {
     phone: string;
     location: string;
   };
+}
+
+/**
+ * One marina a member belongs to — their single "home" marina (where their
+ * boat lives) plus any number of marinas they're just visiting.
+ */
+export interface MemberMarinaMembership {
+  marinaId: string;
+  role: "home" | "visiting";
 }
 
 // ---- Staff side ----

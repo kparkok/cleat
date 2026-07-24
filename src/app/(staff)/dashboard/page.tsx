@@ -1,5 +1,5 @@
 import { StatCard, Pill, Th, Td } from "@/components/staff/ui";
-import { announcements, currentMarina, dashboardStats } from "@/lib/data";
+import { announcements, dashboardStats, staffManagedMarina } from "@/lib/data";
 import {
   ANNOUNCEMENT_CATEGORY_LABELS,
   ANNOUNCEMENT_STATUS_LABELS,
@@ -21,7 +21,7 @@ export default function StaffDashboardPage() {
     <>
       <h1 className="font-serif text-[22px] font-semibold text-navy">Dashboard</h1>
       <div className="u-mono mb-[22px] mt-1 text-[11px] text-ink-soft">
-        {currentMarina.name.toUpperCase()} · {today}
+        {staffManagedMarina.name.toUpperCase()} · {today}
       </div>
 
       <div className="mb-[26px] flex gap-3.5">

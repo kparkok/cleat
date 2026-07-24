@@ -1,15 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { AppHeader, SectionTitle } from "@/components/member/ui";
+import { useMarina } from "@/components/member/MarinaProvider";
 import { AlertIcon, ChevronRightIcon, MarinaIcon, PhoneIcon, UserIcon } from "@/components/icons";
-import { contacts, currentMarina } from "@/lib/data";
+import { contacts } from "@/lib/data";
 
 export default function ContactsPage() {
+  const { activeMarina } = useMarina();
   const staff = contacts.filter((c) => !c.emergency);
   const emergency = contacts.filter((c) => c.emergency);
 
   return (
     <>
-      <AppHeader title="Contacts" subtitle={currentMarina.name} />
+      <AppHeader title="Contacts" subtitle={activeMarina.name} />
 
       <SectionTitle>Marina staff</SectionTitle>
       {staff.map((contact) => (
@@ -79,7 +83,7 @@ export default function ContactsPage() {
               Switch or add a marina
             </span>
             <span className="u-mono mt-0.5 block text-[9.5px] text-ink-soft">
-              Currently: {currentMarina.name}
+              Currently: {activeMarina.name}
             </span>
           </span>
         </span>

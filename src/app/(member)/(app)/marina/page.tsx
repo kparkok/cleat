@@ -1,5 +1,8 @@
+"use client";
+
 import { ProfileHero } from "@/components/member/ProfileHero";
 import { SectionTitle } from "@/components/member/ui";
+import { useMarina } from "@/components/member/MarinaProvider";
 import {
   ClockIcon,
   DogAreaIcon,
@@ -7,11 +10,11 @@ import {
   FuelIcon,
   IceIcon,
   LaundryIcon,
+  MarinaIcon,
   PlusIcon,
   ShowerIcon,
   WifiIcon,
 } from "@/components/icons";
-import { currentMarina } from "@/lib/data";
 import type { Amenity, AmenityIconId } from "@/lib/types";
 
 const AMENITY_ICONS: Record<AmenityIconId, typeof FuelIcon> = {
@@ -23,6 +26,7 @@ const AMENITY_ICONS: Record<AmenityIconId, typeof FuelIcon> = {
   laundry: LaundryIcon,
   ice: IceIcon,
   dogArea: DogAreaIcon,
+  guestDock: MarinaIcon,
 };
 
 function AmenityTile({ amenity }: { amenity: Amenity }) {
@@ -47,7 +51,8 @@ function AmenityTile({ amenity }: { amenity: Amenity }) {
 }
 
 export default function MarinaProfilePage() {
-  const { name, location, status, hours, amenities } = currentMarina;
+  const { activeMarina } = useMarina();
+  const { name, location, status, hours, amenities } = activeMarina;
   const verified = amenities.filter((a) => a.verified);
   const submitted = amenities.filter((a) => !a.verified);
 
@@ -81,20 +86,24 @@ export default function MarinaProfilePage() {
         </div>
       </div>
 
-      <SectionTitle
-        badge={
-          <span className="u-mono rounded-full bg-seaglass/12 px-[7px] py-[2px] text-[8px] font-bold tracking-[0.04em] text-seaglass">
-            {verified.length} verified
-          </span>
-        }
-      >
-        Amenities
-      </SectionTitle>
-      <div className="grid grid-cols-2 gap-2.5 px-5 pb-1.5">
-        {verified.map((a) => (
-          <AmenityTile key={a.id} amenity={a} />
-        ))}
-      </div>
+      {verified.length > 0 && (
+        <>
+          <SectionTitle
+            badge={
+              <span className="u-mono rounded-full bg-seaglass/12 px-[7px] py-[2px] text-[8px] font-bold tracking-[0.04em] text-seaglass">
+                {verified.length} verified
+              </span>
+            }
+          >
+            Amenities
+          </SectionTitle>
+          <div className="grid grid-cols-2 gap-2.5 px-5 pb-1.5">
+            {verified.map((a) => (
+              <AmenityTile key={a.id} amenity={a} />
+            ))}
+          </div>
+        </>
+      )}
 
       {submitted.length > 0 && (
         <>
@@ -105,7 +114,7 @@ export default function MarinaProfilePage() {
               </span>
             }
           >
-            Also here
+            {verified.length > 0 ? "Also here" : "Amenities"}
           </SectionTitle>
           <div className="grid grid-cols-2 gap-2.5 px-5 pb-1.5">
             {submitted.map((a) => (

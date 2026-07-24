@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { HeroBanner } from "@/components/member/HeroBanner";
 import { ConditionsStrip } from "@/components/member/ConditionsStrip";
+import { useMarina } from "@/components/member/MarinaProvider";
 import { ChevronRightIcon, NewsIcon, UserIcon } from "@/components/icons";
-import { announcements, currentMarina } from "@/lib/data";
+import { announcements } from "@/lib/data";
 
 const QUICK_ACTIONS = [
   { href: "/news", label: "Announcements", Icon: NewsIcon },
@@ -10,16 +13,17 @@ const QUICK_ACTIONS = [
 ];
 
 export default function HomePage() {
+  const { activeMarina } = useMarina();
   const latest = announcements.find((a) => a.status === "sent") ?? announcements[0];
 
   return (
     <>
       <HeroBanner
-        name={currentMarina.name}
-        subtitle={currentMarina.slip}
-        imageUrl={currentMarina.bannerImageUrl}
+        name={activeMarina.name}
+        subtitle={activeMarina.slip}
+        imageUrl={activeMarina.bannerImageUrl}
       />
-      <ConditionsStrip conditions={currentMarina.conditions} />
+      <ConditionsStrip conditions={activeMarina.conditions} />
 
       <Link
         href="/news"
@@ -60,7 +64,7 @@ export default function HomePage() {
             Marina office
           </span>
           <span className="u-mono mt-0.5 block text-[9.5px] text-ink-soft">
-            {currentMarina.office.hours}
+            {activeMarina.office.hours}
           </span>
         </span>
         <ChevronRightIcon className="h-3.5 w-3.5 text-ink-soft" />
