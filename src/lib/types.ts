@@ -1,14 +1,6 @@
 // Domain types for Cleat Phase 1. No backend yet — these describe the shape
 // of the mock data in data.ts and will map to DB models later.
 
-export type UsageType = "liveaboard" | "weekend" | "storage";
-
-export const USAGE_LABELS: Record<UsageType, string> = {
-  liveaboard: "Liveaboard",
-  weekend: "Weekend & seasonal",
-  storage: "Storage only",
-};
-
 export type AnnouncementCategory =
   | "emergency"
   | "maintenance"
@@ -50,18 +42,29 @@ export interface PinnedPost {
 
 export interface CommunityPost {
   id: string;
+  /** Which marina's community board this post lives on. */
+  marinaId: string;
   authorName: string;
   initials: string;
+  /** True for the signed-in member's own posts — drives the You tab's per-marina post lists. */
+  authorIsMe?: boolean;
   /** A member of this marina, or someone visiting from elsewhere. */
   kind: "member" | "visiting";
   /** Home marina name, when kind === "visiting". */
   visitingFrom?: string;
-  /** Usage label shown for members, e.g. "Weekend". */
-  usageBadge?: string;
   body: string;
   hearts: number;
   replies: number;
   timeAgo: string;
+  /** Display date, e.g. "Jul 18" — used on the You tab's nested post lists. */
+  date: string;
+}
+
+/** The signed-in member, shown on the You tab's profile header. */
+export interface MemberProfile {
+  name: string;
+  initials: string;
+  email: string;
 }
 
 export interface Contact {
@@ -146,6 +149,8 @@ export interface Marina {
 export interface MemberMarinaMembership {
   marinaId: string;
   role: "home" | "visiting";
+  /** When this became a "visiting" membership, e.g. "Jul 20" — unused for "home". */
+  visitedDates?: string;
 }
 
 // ---- Staff side ----
