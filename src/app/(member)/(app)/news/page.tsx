@@ -33,6 +33,7 @@ export default function NewsPage() {
   const { activeMarina } = useMarina();
   const [board, setBoard] = useState<Board>("marina");
   const posted = announcements.filter((a) => a.status === "sent");
+  const boardPosts = communityPosts.filter((p) => p.marinaId === activeMarina.id);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -107,7 +108,7 @@ export default function NewsPage() {
             other marina members, not staff.
           </div>
 
-          {communityPosts.map((post) => (
+          {boardPosts.map((post) => (
             <div
               key={post.id}
               className="mx-5 mb-3 rounded-xl border border-line bg-white p-[13px_14px]"
@@ -122,16 +123,9 @@ export default function NewsPage() {
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                     {post.kind === "member" ? (
-                      <>
-                        <span className="u-mono rounded-full bg-seaglass/12 px-[7px] py-[2px] text-[7.5px] font-bold text-seaglass">
-                          Member
-                        </span>
-                        {post.usageBadge && (
-                          <span className="u-mono rounded-full bg-paper-dim px-[7px] py-[2px] text-[7.5px] font-bold text-ink-soft">
-                            {post.usageBadge}
-                          </span>
-                        )}
-                      </>
+                      <span className="u-mono rounded-full bg-seaglass/12 px-[7px] py-[2px] text-[7.5px] font-bold text-seaglass">
+                        Member
+                      </span>
                     ) : (
                       <span className="u-mono inline-flex items-center gap-[3px] rounded-full bg-dock/22 px-[7px] py-[2px] text-[7.5px] font-bold text-[#8A6A2E]">
                         <MarinaIcon className="h-2 w-2" strokeWidth={2.5} />

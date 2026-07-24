@@ -8,9 +8,20 @@ import type {
   DashboardStat,
   Marina,
   MemberMarinaMembership,
+  MemberProfile,
   PinnedPost,
   StaffMember,
 } from "./types";
+
+/**
+ * The signed-in member. Same person the staff Members list already shows
+ * (id "rosa" there) — a liveaboard at Shilshole, slip G14.
+ */
+export const currentMember: MemberProfile = {
+  name: "Rosa T.",
+  initials: "RT",
+  email: "rosa.t@email.com",
+};
 
 /**
  * Every marina a member could have open — their home marina plus anything
@@ -159,9 +170,14 @@ export const sampleMarinas: Marina[] = [
   },
 ];
 
-/** Seed membership: every new member starts with just their home marina. */
+/**
+ * Seed membership for the sample member (Rosa T.) — her home marina, plus a
+ * past visit to Fairhaven so the You tab's "home + past visit" scenario is
+ * visible without having to switch marinas first.
+ */
 export const defaultMemberMarinas: MemberMarinaMembership[] = [
   { marinaId: "shilshole", role: "home" },
+  { marinaId: "fairhaven", role: "visiting", visitedDates: "Jul 20–21" },
 ];
 
 /**
@@ -230,20 +246,24 @@ export const announcements: Announcement[] = [
   },
 ];
 
+// Ordered newest-first *within each marina* — the You tab relies on this
+// array order (filter + slice(0, 2)) rather than parsing the display dates.
 export const communityPosts: CommunityPost[] = [
   {
     id: "shore-power",
+    marinaId: "shilshole",
     authorName: "Jordan M.",
     initials: "JM",
     kind: "member",
-    usageBadge: "Weekend",
     body: "Anyone have a spare 30-amp shore power adapter I could borrow this weekend?",
     hearts: 6,
     replies: 3,
     timeAgo: "2h ago",
+    date: "Jul 24",
   },
   {
     id: "fuel-card",
+    marinaId: "shilshole",
     authorName: "Alex R.",
     initials: "AR",
     kind: "visiting",
@@ -252,6 +272,60 @@ export const communityPosts: CommunityPost[] = [
     hearts: 2,
     replies: 2,
     timeAgo: "3h ago",
+    date: "Jul 24",
+  },
+  {
+    id: "seal-sighting",
+    marinaId: "shilshole",
+    authorName: currentMember.name,
+    initials: currentMember.initials,
+    authorIsMe: true,
+    kind: "member",
+    body: "Heads up — saw a seal hauled out near the guest dock this morning. Give it space, it'll move on its own.",
+    hearts: 14,
+    replies: 1,
+    timeAgo: "6d ago",
+    date: "Jul 18",
+  },
+  {
+    id: "power-pedestal",
+    marinaId: "shilshole",
+    authorName: currentMember.name,
+    initials: currentMember.initials,
+    authorIsMe: true,
+    kind: "member",
+    body: "Anyone else notice the guest dock power pedestal on the north end is flaky?",
+    hearts: 3,
+    replies: 5,
+    timeAgo: "2w ago",
+    date: "Jul 9",
+  },
+  {
+    id: "rigger-recommendation",
+    marinaId: "shilshole",
+    authorName: currentMember.name,
+    initials: currentMember.initials,
+    authorIsMe: true,
+    kind: "member",
+    body: "Does anyone have a good rigger they'd recommend near the marina?",
+    hearts: 5,
+    replies: 2,
+    timeAgo: "7w ago",
+    date: "Jun 2",
+  },
+  {
+    id: "fairhaven-fuel-card",
+    marinaId: "fairhaven",
+    authorName: currentMember.name,
+    initials: currentMember.initials,
+    authorIsMe: true,
+    kind: "visiting",
+    visitingFrom: "Shilshole",
+    body: "Does the fuel dock take cards after 6pm, or is it cash only after hours?",
+    hearts: 2,
+    replies: 2,
+    timeAgo: "4d ago",
+    date: "Jul 20",
   },
 ];
 

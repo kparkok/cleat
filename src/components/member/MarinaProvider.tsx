@@ -94,18 +94,26 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
   function switchMarina(marinaId: string, role: "member" | "visiting") {
     const membershipRole: MemberMarinaMembership["role"] =
       role === "member" ? "home" : "visiting";
+    // Stamped whenever a membership becomes "visiting" — either this marina
+    // directly, or the previous home marina getting demoted to one.
+    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
     setMemberMarinas((prev) => {
       // Only one home marina at a time — designating a new one demotes the old.
       const demoted =
         membershipRole === "home"
-          ? prev.map((m) => (m.role === "home" ? { ...m, role: "visiting" as const } : m))
+          ? prev.map((m) =>
+              m.role === "home" ? { ...m, role: "visiting" as const, visitedDates: today } : m,
+            )
           : prev;
 
       const alreadyMember = demoted.some((m) => m.marinaId === marinaId);
+      const patch: Partial<MemberMarinaMembership> =
+        membershipRole === "visiting" ? { role: membershipRole, visitedDates: today } : { role: membershipRole };
+
       return alreadyMember
-        ? demoted.map((m) => (m.marinaId === marinaId ? { ...m, role: membershipRole } : m))
-        : [...demoted, { marinaId, role: membershipRole }];
+        ? demoted.map((m) => (m.marinaId === marinaId ? { ...m, ...patch } : m))
+        : [...demoted, { marinaId, role: membershipRole, ...patch }];
     });
 
     setActiveMarinaId(marinaId);
