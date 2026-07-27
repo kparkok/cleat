@@ -40,6 +40,16 @@ export interface PinnedPost {
   tone: "default" | "alert";
 }
 
+export interface PostComment {
+  id: string;
+  authorName: string;
+  initials: string;
+  /** True when this comment was written by the signed-in member. */
+  authorIsMe?: boolean;
+  body: string;
+  timeAgo: string;
+}
+
 export interface CommunityPost {
   id: string;
   /** Which marina's community board this post lives on. */
@@ -53,8 +63,12 @@ export interface CommunityPost {
   /** Home marina name, when kind === "visiting". */
   visitingFrom?: string;
   body: string;
+  /** Total like count (all members including the current one). */
   hearts: number;
-  replies: number;
+  /** Whether the signed-in member has liked this post. */
+  likedByMe: boolean;
+  /** Flat reply list — no nested threading. */
+  comments: PostComment[];
   timeAgo: string;
   /** Display date, e.g. "Jul 18" — used on the You tab's nested post lists. */
   date: string;
@@ -65,6 +79,7 @@ export interface MemberProfile {
   name: string;
   initials: string;
   email: string;
+  username: string;
 }
 
 export interface Contact {

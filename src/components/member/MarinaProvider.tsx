@@ -5,20 +5,68 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { defaultMemberMarinas, sampleMarinas } from "@/lib/data";
-import type { MemberMarinaMembership } from "@/lib/types";
+import { communityPosts, currentMember, defaultMemberMarinas, sampleMarinas } from "@/lib/data";
+import {
+  demoteHomeMembership,
+  fetchMemberData,
+  upsertMembership,
+} from "@/lib/member-db";
+import { fetchContacts, fetchMarinas } from "@/lib/marina-db";
+import {
+  dbDeleteComment,
+  dbDeletePost,
+  dbInsertComment,
+  dbInsertPost,
+  dbUpdateComment,
+  dbUpdatePost,
+  deleteLike,
+  fetchCommunityPosts,
+  fetchMarinaBoardData,
+  fetchMyPosts,
+  upsertLike,
+} from "@/lib/news-db";
+import type {
+  Announcement,
+  Contact,
+  CommunityPost,
+  Marina,
+  MemberMarinaMembership,
+  MemberProfile,
+  PinnedPost,
+  PostComment,
+} from "@/lib/types";
 
 interface MarinaContextValue {
-  /** The marina whose data Home/News/Contacts/etc. are currently showing. */
-  activeMarina: (typeof sampleMarinas)[number];
-  /** Marinas this member belongs to — one "home", any number "visiting". */
+  member: MemberProfile;
+  marinas: Marina[];
+  activeMarina: Marina;
   memberMarinas: MemberMarinaMembership[];
-  /** Switch the active marina, recording it in the member's marina list. */
   switchMarina: (marinaId: string, role: "member" | "visiting") => void;
+  viewMarina: (marinaId: string) => void;
+  /** Active marina's community posts — filtered to activeMarina.id. */
+  posts: CommunityPost[];
+  /** Current member's own posts across all their marinas — for You tab + My Posts screen. */
+  myPosts: CommunityPost[];
+  /** True while community posts for the active marina are loading. */
+  postsLoading: boolean;
+  /** Cached marina board announcements for the active marina. */
+  boardAnnouncements: Announcement[];
+  /** Cached pinned posts for the active marina. */
+  boardPinned: PinnedPost[];
+  /** Contacts for the active marina (staff + emergency), scoped per marina. */
+  contacts: Contact[];
+  /** True while contacts for the active marina are loading. */
+  contactsLoading: boolean;
+  addPost: (body: string) => void;
+  toggleLike: (postId: string) => void;
+  addComment: (postId: string, body: string) => void;
+  editPost: (postId: string, body: string) => void;
+  deletePost: (postId: string) => void;
+  editComment: (postId: string, commentId: string, body: string) => void;
+  deleteComment: (postId: string, commentId: string) => void;
 }
 
 const MarinaContext = createContext<MarinaContextValue | null>(null);
@@ -50,15 +98,48 @@ function isStoredState(value: unknown): value is StoredState {
 }
 
 export function MarinaProvider({ children }: { children: ReactNode }) {
-  // Initial render always uses the deterministic seed — on both server and
-  // client — so hydration matches. Any persisted choice is applied right
-  // after mount, in the effect below.
-  const [memberMarinas, setMemberMarinas] = useState<MemberMarinaMembership[]>(
-    defaultMemberMarinas,
-  );
+  const [member, setMember] = useState<MemberProfile>(currentMember);
+  const [marinas, setMarinas] = useState<Marina[]>(sampleMarinas);
+  const [memberMarinas, setMemberMarinas] = useState<MemberMarinaMembership[]>(defaultMemberMarinas);
   const [activeMarinaId, setActiveMarinaId] = useState(DEFAULT_ACTIVE_ID);
-  const hydrated = useRef(false);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [myPosts, setMyPosts] = useState<CommunityPost[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [boardAnnouncements, setBoardAnnouncements] = useState<Announcement[]>([]);
+  const [boardPinned, setBoardPinned] = useState<PinnedPost[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(true);
+  // Becomes true after localStorage is read so marina-scoped fetches use the
+  // correct activeMarinaId instead of the seed default.
+  const [hydrated, setHydrated] = useState(false);
 
+  // Marina list and member data are independent of active marina — start immediately.
+  useEffect(() => {
+    fetchMarinas()
+      .then(setMarinas)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchMemberData()
+      .then(({ member: m, memberships }) => {
+        setMember(m);
+        setMemberMarinas(memberships);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Member's own posts don't change when the active marina changes.
+  useEffect(() => {
+    fetchMyPosts()
+      .then(setMyPosts)
+      .catch(() => {
+        setMyPosts(communityPosts.filter((p) => p.authorIsMe));
+      });
+  }, []);
+
+  // Restore localStorage before firing marina-scoped fetches so we use the
+  // correct marina ID from the first request.
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -70,36 +151,78 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch {
-      // Corrupt or inaccessible storage — fall back to the seeded default.
+      // Corrupt or inaccessible — fall back to seed default.
     } finally {
-      hydrated.current = true;
+      setHydrated(true);
     }
   }, []);
 
+  // Persist active marina to localStorage (skip the initial write before restore).
   useEffect(() => {
-    // Skip the write on first mount so we don't clobber storage with the
-    // seed default before the read above has had a chance to run.
-    if (!hydrated.current) return;
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({ activeMarinaId, memberMarinas }),
       );
     } catch {
-      // Storage unavailable (private browsing, quota) — state still works
-      // for this session, it just won't survive a reload.
+      // Storage unavailable — state works for this session only.
     }
-  }, [activeMarinaId, memberMarinas]);
+  }, [hydrated, activeMarinaId, memberMarinas]);
+
+  // Community posts and marina board are marina-scoped. Wait for hydration so
+  // we fetch the correct marina on the first request (not the seed default).
+  useEffect(() => {
+    if (!hydrated) return;
+    setPostsLoading(true);
+    fetchCommunityPosts(activeMarinaId)
+      .then((data) => {
+        setPosts(data);
+        setPostsLoading(false);
+      })
+      .catch(() => {
+        setPosts(communityPosts.filter((p) => p.marinaId === activeMarinaId));
+        setPostsLoading(false);
+      });
+  }, [hydrated, activeMarinaId]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    fetchMarinaBoardData(activeMarinaId)
+      .then(({ announcements, pinnedPosts }) => {
+        setBoardAnnouncements(announcements);
+        setBoardPinned(pinnedPosts);
+      })
+      .catch(() => {});
+  }, [hydrated, activeMarinaId]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    setContactsLoading(true);
+    fetchContacts(activeMarinaId)
+      .then((data) => {
+        setContacts(data);
+        setContactsLoading(false);
+      })
+      .catch(() => {
+        setContactsLoading(false);
+      });
+  }, [hydrated, activeMarinaId]);
+
+  function viewMarina(marinaId: string) {
+    setActiveMarinaId(marinaId);
+  }
 
   function switchMarina(marinaId: string, role: "member" | "visiting") {
     const membershipRole: MemberMarinaMembership["role"] =
       role === "member" ? "home" : "visiting";
-    // Stamped whenever a membership becomes "visiting" — either this marina
-    // directly, or the previous home marina getting demoted to one.
     const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
+    // Capture state before optimistic update so we can revert on DB failure.
+    const prevMemberMarinas = memberMarinas;
+    const prevActiveMarinaId = activeMarinaId;
+
     setMemberMarinas((prev) => {
-      // Only one home marina at a time — designating a new one demotes the old.
       const demoted =
         membershipRole === "home"
           ? prev.map((m) =>
@@ -117,16 +240,215 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
     });
 
     setActiveMarinaId(marinaId);
+
+    const doDbWrite = async () => {
+      if (membershipRole === "home") {
+        await demoteHomeMembership(today);
+      }
+      await upsertMembership(marinaId, membershipRole, today);
+    };
+    doDbWrite().catch(() => {
+      setMemberMarinas(prevMemberMarinas);
+      setActiveMarinaId(prevActiveMarinaId);
+    });
+  }
+
+  function addPost(body: string) {
+    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const isHome = memberMarinas.find((m) => m.marinaId === activeMarinaId)?.role === "home";
+    const homeMarinaId = memberMarinas.find((m) => m.role === "home")?.marinaId;
+    const visitingFrom =
+      !isHome && homeMarinaId
+        ? marinas.find((m) => m.id === homeMarinaId)?.name
+        : undefined;
+    const kind: CommunityPost["kind"] = isHome ? "member" : "visiting";
+    const tempId = `post-${Date.now()}`;
+
+    const newPost: CommunityPost = {
+      id: tempId,
+      marinaId: activeMarinaId,
+      authorName: `@${member.username}`,
+      initials: member.initials,
+      authorIsMe: true,
+      kind,
+      visitingFrom,
+      body,
+      hearts: 0,
+      likedByMe: false,
+      comments: [],
+      timeAgo: "Just now",
+      date: today,
+    };
+
+    setPosts((prev) => [newPost, ...prev]);
+    setMyPosts((prev) => [newPost, ...prev]);
+
+    dbInsertPost(activeMarinaId, body, kind, visitingFrom)
+      .then((realId) => {
+        const swap = (p: CommunityPost) => (p.id === tempId ? { ...p, id: realId } : p);
+        setPosts((prev) => prev.map(swap));
+        setMyPosts((prev) => prev.map(swap));
+      })
+      .catch(() => {});
+  }
+
+  function toggleLike(postId: string) {
+    const wasLiked = posts.find((p) => p.id === postId)?.likedByMe ?? false;
+
+    const applyLike = (p: CommunityPost) =>
+      p.id !== postId
+        ? p
+        : { ...p, likedByMe: !wasLiked, hearts: wasLiked ? p.hearts - 1 : p.hearts + 1 };
+    const revertLike = (p: CommunityPost) =>
+      p.id !== postId
+        ? p
+        : { ...p, likedByMe: wasLiked, hearts: wasLiked ? p.hearts + 1 : p.hearts - 1 };
+
+    setPosts((prev) => prev.map(applyLike));
+    setMyPosts((prev) => prev.map(applyLike));
+
+    (wasLiked ? deleteLike(postId) : upsertLike(postId)).catch(() => {
+      setPosts((prev) => prev.map(revertLike));
+      setMyPosts((prev) => prev.map(revertLike));
+    });
+  }
+
+  function addComment(postId: string, body: string) {
+    const tempId = `comment-${Date.now()}`;
+    const newComment: PostComment = {
+      id: tempId,
+      authorName: `@${member.username}`,
+      initials: member.initials,
+      authorIsMe: true,
+      body,
+      timeAgo: "Just now",
+    };
+
+    const appendComment = (p: CommunityPost) =>
+      p.id !== postId ? p : { ...p, comments: [...p.comments, newComment] };
+
+    setPosts((prev) => prev.map(appendComment));
+    setMyPosts((prev) => prev.map(appendComment));
+
+    dbInsertComment(postId, body)
+      .then((realId) => {
+        const swapComment = (p: CommunityPost) =>
+          p.id !== postId
+            ? p
+            : {
+                ...p,
+                comments: p.comments.map((c) => (c.id === tempId ? { ...c, id: realId } : c)),
+              };
+        setPosts((prev) => prev.map(swapComment));
+        setMyPosts((prev) => prev.map(swapComment));
+      })
+      .catch(() => {});
+  }
+
+  function editPost(postId: string, body: string) {
+    const old = posts.find((p) => p.id === postId);
+
+    const applyEdit = (p: CommunityPost) => (p.id === postId ? { ...p, body } : p);
+    setPosts((prev) => prev.map(applyEdit));
+    setMyPosts((prev) => prev.map(applyEdit));
+
+    dbUpdatePost(postId, body).catch(() => {
+      if (old) {
+        const revert = (p: CommunityPost) => (p.id === postId ? { ...p, body: old.body } : p);
+        setPosts((prev) => prev.map(revert));
+        setMyPosts((prev) => prev.map(revert));
+      }
+    });
+  }
+
+  function deletePost(postId: string) {
+    const removed = posts.find((p) => p.id === postId);
+
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setMyPosts((prev) => prev.filter((p) => p.id !== postId));
+
+    dbDeletePost(postId).catch(() => {
+      if (removed) {
+        setPosts((prev) => [removed, ...prev.filter((p) => p.id !== postId)]);
+        setMyPosts((prev) => [removed, ...prev.filter((p) => p.id !== postId)]);
+      }
+    });
+  }
+
+  function editComment(postId: string, commentId: string, body: string) {
+    const old = posts.find((p) => p.id === postId)?.comments.find((c) => c.id === commentId);
+
+    const applyEdit = (p: CommunityPost) =>
+      p.id !== postId
+        ? p
+        : { ...p, comments: p.comments.map((c) => (c.id === commentId ? { ...c, body } : c)) };
+    setPosts((prev) => prev.map(applyEdit));
+
+    dbUpdateComment(commentId, body).catch(() => {
+      if (old) {
+        const revert = (p: CommunityPost) =>
+          p.id !== postId
+            ? p
+            : {
+                ...p,
+                comments: p.comments.map((c) =>
+                  c.id === commentId ? { ...c, body: old.body } : c,
+                ),
+              };
+        setPosts((prev) => prev.map(revert));
+      }
+    });
+  }
+
+  function deleteComment(postId: string, commentId: string) {
+    const removed = posts.find((p) => p.id === postId)?.comments.find((c) => c.id === commentId);
+
+    const filterComment = (p: CommunityPost) =>
+      p.id !== postId
+        ? p
+        : { ...p, comments: p.comments.filter((c) => c.id !== commentId) };
+    setPosts((prev) => prev.map(filterComment));
+    setMyPosts((prev) => prev.map(filterComment));
+
+    dbDeleteComment(commentId).catch(() => {
+      if (removed) {
+        const restore = (p: CommunityPost) =>
+          p.id !== postId ? p : { ...p, comments: [...p.comments, removed] };
+        setPosts((prev) => prev.map(restore));
+        setMyPosts((prev) => prev.map(restore));
+      }
+    });
   }
 
   const activeMarina = useMemo(
-    () => sampleMarinas.find((m) => m.id === activeMarinaId) ?? sampleMarinas[0],
-    [activeMarinaId],
+    () => marinas.find((m) => m.id === activeMarinaId) ?? marinas[0],
+    [activeMarinaId, marinas],
   );
 
   const value = useMemo(
-    () => ({ activeMarina, memberMarinas, switchMarina }),
-    [activeMarina, memberMarinas],
+    () => ({
+      member,
+      marinas,
+      activeMarina,
+      memberMarinas,
+      switchMarina,
+      viewMarina,
+      posts,
+      myPosts,
+      postsLoading,
+      boardAnnouncements,
+      boardPinned,
+      contacts,
+      contactsLoading,
+      addPost,
+      toggleLike,
+      addComment,
+      editPost,
+      deletePost,
+      editComment,
+      deleteComment,
+    }),
+    [member, marinas, activeMarina, memberMarinas, posts, myPosts, postsLoading, boardAnnouncements, boardPinned, contacts, contactsLoading],
   );
 
   return <MarinaContext.Provider value={value}>{children}</MarinaContext.Provider>;
