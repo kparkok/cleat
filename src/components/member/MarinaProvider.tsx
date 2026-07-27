@@ -9,8 +9,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { defaultMemberMarinas, sampleMarinas } from "@/lib/data";
-import type { MemberMarinaMembership } from "@/lib/types";
+import { communityPosts, currentMember, defaultMemberMarinas, sampleMarinas } from "@/lib/data";
+import type { CommunityPost, MemberMarinaMembership, PostComment } from "@/lib/types";
 
 interface MarinaContextValue {
   /** The marina whose data Home/News/Contacts/etc. are currently showing. */
@@ -19,6 +19,14 @@ interface MarinaContextValue {
   memberMarinas: MemberMarinaMembership[];
   /** Switch the active marina, recording it in the member's marina list. */
   switchMarina: (marinaId: string, role: "member" | "visiting") => void;
+  /** All community posts across marinas — seeded data plus any created this session. */
+  posts: CommunityPost[];
+  /** Add a post to the active marina's community board as the current member. */
+  addPost: (body: string) => void;
+  /** Toggle the current member's like on a post, updating the heart count. */
+  toggleLike: (postId: string) => void;
+  /** Append a reply to a post's comment thread as the current member. */
+  addComment: (postId: string, body: string) => void;
 }
 
 const MarinaContext = createContext<MarinaContextValue | null>(null);
@@ -57,6 +65,7 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
     defaultMemberMarinas,
   );
   const [activeMarinaId, setActiveMarinaId] = useState(DEFAULT_ACTIVE_ID);
+  const [posts, setPosts] = useState<CommunityPost[]>(communityPosts);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -119,14 +128,68 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
     setActiveMarinaId(marinaId);
   }
 
+  function addPost(body: string) {
+    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const isHome = memberMarinas.find((m) => m.marinaId === activeMarinaId)?.role === "home";
+    const homeMarinaId = memberMarinas.find((m) => m.role === "home")?.marinaId;
+    const visitingFrom =
+      !isHome && homeMarinaId
+        ? sampleMarinas.find((m) => m.id === homeMarinaId)?.name
+        : undefined;
+
+    const newPost: CommunityPost = {
+      id: `post-${Date.now()}`,
+      marinaId: activeMarinaId,
+      authorName: `@${currentMember.username}`,
+      initials: currentMember.initials,
+      authorIsMe: true,
+      kind: isHome ? "member" : "visiting",
+      visitingFrom,
+      body,
+      hearts: 0,
+      likedByMe: false,
+      comments: [],
+      timeAgo: "Just now",
+      date: today,
+    };
+
+    setPosts((prev) => [newPost, ...prev]);
+  }
+
+  function toggleLike(postId: string) {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id !== postId
+          ? p
+          : { ...p, likedByMe: !p.likedByMe, hearts: p.likedByMe ? p.hearts - 1 : p.hearts + 1 },
+      ),
+    );
+  }
+
+  function addComment(postId: string, body: string) {
+    const newComment: PostComment = {
+      id: `comment-${Date.now()}`,
+      authorName: `@${currentMember.username}`,
+      initials: currentMember.initials,
+      authorIsMe: true,
+      body,
+      timeAgo: "Just now",
+    };
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id !== postId ? p : { ...p, comments: [...p.comments, newComment] },
+      ),
+    );
+  }
+
   const activeMarina = useMemo(
     () => sampleMarinas.find((m) => m.id === activeMarinaId) ?? sampleMarinas[0],
     [activeMarinaId],
   );
 
   const value = useMemo(
-    () => ({ activeMarina, memberMarinas, switchMarina }),
-    [activeMarina, memberMarinas],
+    () => ({ activeMarina, memberMarinas, switchMarina, posts, addPost, toggleLike, addComment }),
+    [activeMarina, memberMarinas, posts],
   );
 
   return <MarinaContext.Provider value={value}>{children}</MarinaContext.Provider>;

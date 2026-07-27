@@ -3,16 +3,11 @@
 import { useState } from "react";
 import { AppHeader } from "@/components/member/ui";
 import { SegmentedToggle } from "@/components/member/SegmentedToggle";
-import {
-  AlertIcon,
-  FileIcon,
-  HeartIcon,
-  MarinaIcon,
-  PlusIcon,
-  ReplyIcon,
-} from "@/components/icons";
+import { AlertIcon, FileIcon, PlusIcon } from "@/components/icons";
+import { CommunityPostCard } from "@/components/member/CommunityPostCard";
 import { useMarina } from "@/components/member/MarinaProvider";
-import { announcements, communityPosts, pinnedPosts } from "@/lib/data";
+import { PostComposerSheet } from "@/components/member/PostComposerSheet";
+import { announcements, pinnedPosts } from "@/lib/data";
 import { ANNOUNCEMENT_CATEGORY_LABELS, type AnnouncementCategory } from "@/lib/types";
 
 type Board = "marina" | "community";
@@ -30,10 +25,11 @@ const CATEGORY_CLASSNAMES: Record<AnnouncementCategory, string> = {
 };
 
 export default function NewsPage() {
-  const { activeMarina } = useMarina();
+  const { activeMarina, posts, addPost, toggleLike, addComment } = useMarina();
   const [board, setBoard] = useState<Board>("marina");
+  const [composing, setComposing] = useState(false);
   const posted = announcements.filter((a) => a.status === "sent");
-  const boardPosts = communityPosts.filter((p) => p.marinaId === activeMarina.id);
+  const boardPosts = posts.filter((p) => p.marinaId === activeMarina.id);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -103,60 +99,34 @@ export default function NewsPage() {
         </div>
       ) : (
         <div className="relative flex-1 pb-4">
+          {composing && (
+            <PostComposerSheet
+              marinaName={activeMarina.name}
+              onPost={(body) => {
+                addPost(body);
+                setComposing(false);
+              }}
+              onDismiss={() => setComposing(false)}
+            />
+          )}
           <div className="mx-5 mb-3 mt-3.5 rounded-[10px] border border-seaglass/25 bg-seaglass/8 p-2.5 text-[10.5px] leading-relaxed text-ink-soft">
             <b className="text-seaglass">Member-run.</b> Posts here come from
             other marina members, not staff.
           </div>
 
           {boardPosts.map((post) => (
-            <div
+            <CommunityPostCard
               key={post.id}
-              className="mx-5 mb-3 rounded-xl border border-line bg-white p-[13px_14px]"
-            >
-              <div className="mb-2 flex items-center gap-[9px]">
-                <span className="u-mono grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-paper-dim text-[9.5px] font-bold text-navy">
-                  {post.initials}
-                </span>
-                <div>
-                  <div className="text-xs font-semibold text-navy">
-                    {post.authorName}
-                  </div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                    {post.kind === "member" ? (
-                      <span className="u-mono rounded-full bg-seaglass/12 px-[7px] py-[2px] text-[7.5px] font-bold text-seaglass">
-                        Member
-                      </span>
-                    ) : (
-                      <span className="u-mono inline-flex items-center gap-[3px] rounded-full bg-dock/22 px-[7px] py-[2px] text-[7.5px] font-bold text-[#8A6A2E]">
-                        <MarinaIcon className="h-2 w-2" strokeWidth={2.5} />
-                        Visiting from {post.visitingFrom}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <span className="u-mono ml-auto shrink-0 text-[9px] text-ink-soft">
-                  {post.timeAgo}
-                </span>
-              </div>
-              <div className="text-[11.5px] leading-relaxed text-ink">
-                {post.body}
-              </div>
-              <div className="mt-2.5 flex gap-3.5 border-t border-line pt-2">
-                <span className="flex items-center gap-[5px] text-[10.5px] text-ink-soft">
-                  <HeartIcon className="h-3 w-3" />
-                  {post.hearts}
-                </span>
-                <span className="flex items-center gap-[5px] text-[10.5px] text-ink-soft">
-                  <ReplyIcon className="h-3 w-3" />
-                  {post.replies} replies
-                </span>
-              </div>
-            </div>
+              post={post}
+              onToggleLike={() => toggleLike(post.id)}
+              onAddComment={(body) => addComment(post.id, body)}
+            />
           ))}
 
           <button
             type="button"
             aria-label="New community post"
+            onClick={() => setComposing(true)}
             className="fixed bottom-[calc(60px+env(safe-area-inset-bottom)+18px)] right-[max(16px,calc((100vw-440px)/2+16px))] grid h-11 w-11 place-items-center rounded-full bg-coral shadow-[0_8px_20px_rgba(224,96,47,0.4)] transition-opacity hover:opacity-90"
           >
             <PlusIcon className="h-[18px] w-[18px] text-white" strokeWidth={2.2} />

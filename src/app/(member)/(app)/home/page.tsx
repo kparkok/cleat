@@ -20,7 +20,7 @@ export default function HomePage() {
     <>
       <HeroBanner
         name={activeMarina.name}
-        subtitle={activeMarina.slip}
+        subtitle={activeMarina.location}
         imageUrl={activeMarina.bannerImageUrl}
       />
       <ConditionsStrip conditions={activeMarina.conditions} />

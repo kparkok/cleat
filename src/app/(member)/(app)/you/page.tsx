@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useMarina } from "@/components/member/MarinaProvider";
 import { ChevronRightIcon, MarinaIcon, PlusIcon } from "@/components/icons";
-import { communityPosts, currentMember, sampleMarinas } from "@/lib/data";
+import { currentMember, sampleMarinas } from "@/lib/data";
 
 const BOTTOM_LINKS = ["Notification settings", "Sign out"];
 
 export default function YouPage() {
-  const { memberMarinas } = useMarina();
+  const { memberMarinas, posts } = useMarina();
 
   return (
     <>
@@ -20,7 +20,7 @@ export default function YouPage() {
           <div className="font-serif text-[19px] font-semibold">{currentMember.name}</div>
           {/* Not u-mono — that forces uppercase, which garbles an email address. */}
           <div className="mt-[3px] font-mono text-[10px] text-paper/50">
-            {currentMember.email}
+            @{currentMember.username}
           </div>
         </div>
       </div>
@@ -38,7 +38,7 @@ export default function YouPage() {
         const marina = sampleMarinas.find((m) => m.id === membership.marinaId);
         if (!marina) return null;
 
-        const myPosts = communityPosts.filter(
+        const myPosts = posts.filter(
           (p) => p.marinaId === marina.id && p.authorIsMe,
         );
         const shown = myPosts.slice(0, 2);
@@ -59,7 +59,7 @@ export default function YouPage() {
                 <div className="text-[13px] font-semibold text-navy">{marina.name}</div>
                 <div className="u-mono mt-0.5 text-[9px] text-ink-soft">
                   {isHome
-                    ? marina.slip
+                    ? marina.location
                     : `Visited ${membership.visitedDates ?? marina.location}`}
                 </div>
               </div>
@@ -78,8 +78,8 @@ export default function YouPage() {
                   <div key={post.id} className="mb-2.5 last:mb-0">
                     <div className="text-[11.5px] leading-snug text-ink">{post.body}</div>
                     <div className="u-mono mt-[3px] text-[9px] text-ink-soft">
-                      {post.date} · {post.hearts} reactions · {post.replies}{" "}
-                      {post.replies === 1 ? "reply" : "replies"}
+                      {post.date} · {post.hearts} reactions · {post.comments.length}{" "}
+                      {post.comments.length === 1 ? "reply" : "replies"}
                     </div>
                   </div>
                 ))}
