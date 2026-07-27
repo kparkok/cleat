@@ -104,6 +104,22 @@ export function ChevronRightIcon(props: IconProps) {
   );
 }
 
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={2} {...props}>
+      <path d="M6 9l6 6 6-6" />
+    </Base>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Base strokeWidth={2.5} {...props}>
+      <path d="M20 6L9 17l-5-5" />
+    </Base>
+  );
+}
+
 export function SearchIcon(props: IconProps) {
   return (
     <Base strokeWidth={2} {...props}>
@@ -136,6 +152,16 @@ export function IssuesIcon(props: IconProps) {
     <Base {...props}>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 8v4m0 4h.01" />
+    </Base>
+  );
+}
+
+export function MoreVerticalIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none" />
     </Base>
   );
 }

@@ -4,14 +4,20 @@ import { useRef, useState } from "react";
 
 export function PostComposerSheet({
   marinaName,
+  initialBody = "",
+  title = "New post",
+  submitLabel = "Post",
   onPost,
   onDismiss,
 }: {
   marinaName: string;
+  initialBody?: string;
+  title?: string;
+  submitLabel?: string;
   onPost: (body: string) => void;
   onDismiss: () => void;
 }) {
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(initialBody);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function handlePost() {
@@ -30,7 +36,7 @@ export function PostComposerSheet({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-[15px] h-1 w-[34px] rounded-full bg-line" />
-        <div className="font-serif text-[17px] font-semibold text-navy">New post</div>
+        <div className="font-serif text-[17px] font-semibold text-navy">{title}</div>
         <div className="u-mono mb-3.5 mt-[3px] text-[9.5px] text-ink-soft">
           {marinaName} · community board
         </div>
@@ -57,7 +63,7 @@ export function PostComposerSheet({
             disabled={!body.trim()}
             className="flex-1 rounded-[10px] bg-coral py-2.5 text-[12.5px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            Post
+            {submitLabel}
           </button>
         </div>
       </div>

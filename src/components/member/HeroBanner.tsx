@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { ChevronDownIcon } from "@/components/icons";
 
 const DARK_OVERLAY =
   "linear-gradient(180deg, rgba(8,24,38,0.1) 0%, rgba(8,24,38,0.75) 100%)";
@@ -10,15 +13,20 @@ const DEFAULT_SEA_GRADIENT =
  * default; if staff upload a custom banner image (bannerImageUrl on the
  * marina record), that photo renders instead with the same dark-bottom
  * overlay so the name/subtitle stay legible.
+ *
+ * When onNameClick is provided the marina name becomes a tappable switcher
+ * trigger, indicated by a small chevron.
  */
 export function HeroBanner({
   name,
   subtitle,
   imageUrl,
+  onNameClick,
 }: {
   name: string;
   subtitle: string;
   imageUrl?: string;
+  onNameClick?: () => void;
 }) {
   return (
     <div className="relative h-[190px] shrink-0 overflow-hidden">
@@ -37,9 +45,22 @@ export function HeroBanner({
       )}
 
       <div className="absolute bottom-3.5 left-5 z-10">
-        <div className="font-serif text-[21px] font-semibold text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.3)]">
-          {name}
-        </div>
+        {onNameClick ? (
+          <button
+            type="button"
+            onClick={onNameClick}
+            className="group flex items-center gap-1 text-left"
+          >
+            <span className="font-serif text-[21px] font-semibold text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.3)]">
+              {name}
+            </span>
+            <ChevronDownIcon className="h-4 w-4 text-white/60 transition-opacity group-hover:text-white/90" />
+          </button>
+        ) : (
+          <div className="font-serif text-[21px] font-semibold text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.3)]">
+            {name}
+          </div>
+        )}
         <div className="u-mono mt-0.5 text-[10px] tracking-[0.08em] text-dock">
           {subtitle}
         </div>

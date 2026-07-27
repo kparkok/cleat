@@ -2,28 +2,38 @@
 
 import { useRef, useState } from "react";
 import { HeartIcon, MarinaIcon, ReplyIcon } from "@/components/icons";
+import { OverflowMenu } from "@/components/member/OverflowMenu";
 import type { CommunityPost } from "@/lib/types";
 
 export function CommunityPostCard({
   post,
+  highlighted,
   onToggleLike,
   onAddComment,
+  onEditPost,
+  onDeletePost,
+  onEditComment,
+  onDeleteComment,
 }: {
   post: CommunityPost;
+  highlighted?: boolean;
   onToggleLike: () => void;
   onAddComment: (body: string) => void;
+  onEditPost?: () => void;
+  onDeletePost?: () => void;
+  onEditComment?: (commentId: string, body: string) => void;
+  onDeleteComment?: (commentId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentBody, setEditingCommentBody] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const commentCount = post.comments.length;
 
   function handleToggleExpanded() {
     setExpanded((prev) => {
-      if (!prev) {
-        // Focus the reply input on next tick after the section mounts
-        setTimeout(() => inputRef.current?.focus(), 0);
-      }
+      if (!prev) setTimeout(() => inputRef.current?.focus(), 0);
       return !prev;
     });
   }
@@ -36,14 +46,36 @@ export function CommunityPostCard({
     inputRef.current?.focus();
   }
 
+  function startEditComment(commentId: string, currentBody: string) {
+    setEditingCommentId(commentId);
+    setEditingCommentBody(currentBody);
+  }
+
+  function saveEditComment(commentId: string) {
+    const trimmed = editingCommentBody.trim();
+    if (trimmed && trimmed !== post.comments.find((c) => c.id === commentId)?.body) {
+      onEditComment?.(commentId, trimmed);
+    }
+    setEditingCommentId(null);
+  }
+
+  function cancelEditComment() {
+    setEditingCommentId(null);
+    setEditingCommentBody("");
+  }
+
   return (
-    <div className="mx-5 mb-3 rounded-xl border border-line bg-white p-[13px_14px]">
+    <div
+      className={`mx-5 mb-3 rounded-xl border p-[13px_14px] transition-colors duration-700 ${
+        highlighted ? "border-dock bg-dock/8" : "border-line bg-white"
+      }`}
+    >
       {/* Header */}
       <div className="mb-2 flex items-center gap-[9px]">
         <span className="u-mono grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-paper-dim text-[9.5px] font-bold text-navy">
           {post.initials}
         </span>
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="text-xs font-semibold text-navy">{post.authorName}</div>
           <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
             {post.kind === "member" ? (
@@ -58,7 +90,12 @@ export function CommunityPostCard({
             )}
           </div>
         </div>
-        <span className="u-mono ml-auto shrink-0 text-[9px] text-ink-soft">{post.timeAgo}</span>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <span className="u-mono text-[9px] text-ink-soft">{post.timeAgo}</span>
+          {post.authorIsMe && onEditPost && onDeletePost && (
+            <OverflowMenu onEdit={onEditPost} onDelete={onDeletePost} />
+          )}
+        </div>
       </div>
 
       {/* Body */}
@@ -70,16 +107,64 @@ export function CommunityPostCard({
           {post.comments.length > 0 && (
             <div className="mb-3 space-y-3">
               {post.comments.map((comment) => (
-                <div key={comment.id} className="flex gap-2">
-                  <span className="u-mono grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-paper-dim text-[8px] font-bold text-navy">
+                <div key={comment.id} className="flex items-start gap-2">
+                  <span className="u-mono mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-paper-dim text-[8px] font-bold text-navy">
                     {comment.initials}
                   </span>
-                  <div className="min-w-0">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-[11px] font-semibold text-navy">{comment.authorName}</span>
-                      <span className="u-mono text-[8.5px] text-ink-soft">{comment.timeAgo}</span>
-                    </div>
-                    <div className="mt-[2px] text-[11px] leading-snug text-ink">{comment.body}</div>
+                  <div className="min-w-0 flex-1">
+                    {editingCommentId === comment.id ? (
+                      <div className="flex gap-2">
+                        <input
+                          autoFocus
+                          value={editingCommentBody}
+                          onChange={(e) => setEditingCommentBody(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              saveEditComment(comment.id);
+                            }
+                            if (e.key === "Escape") cancelEditComment();
+                          }}
+                          className="min-w-0 flex-1 rounded-lg border border-navy px-2.5 py-1 text-[11.5px] text-navy focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={cancelEditComment}
+                          className="shrink-0 text-[10px] text-ink-soft transition-colors hover:text-navy"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => saveEditComment(comment.id)}
+                          className="shrink-0 text-[10px] font-semibold text-seaglass transition-colors hover:opacity-80"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-semibold text-navy">
+                            {comment.authorName}
+                          </span>
+                          <span className="u-mono text-[8.5px] text-ink-soft">
+                            {comment.timeAgo}
+                          </span>
+                          {comment.authorIsMe && onEditComment && onDeleteComment && (
+                            <div className="ml-auto">
+                              <OverflowMenu
+                                onEdit={() => startEditComment(comment.id, comment.body)}
+                                onDelete={() => onDeleteComment(comment.id)}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-[2px] text-[11px] leading-snug text-ink">
+                          {comment.body}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

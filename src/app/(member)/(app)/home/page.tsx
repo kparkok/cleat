@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { HeroBanner } from "@/components/member/HeroBanner";
 import { ConditionsStrip } from "@/components/member/ConditionsStrip";
+import { MarinaSwitcherSheet } from "@/components/member/MarinaSwitcherSheet";
 import { useMarina } from "@/components/member/MarinaProvider";
 import { ChevronRightIcon, NewsIcon, UserIcon } from "@/components/icons";
 import { announcements } from "@/lib/data";
@@ -14,14 +16,16 @@ const QUICK_ACTIONS = [
 
 export default function HomePage() {
   const { activeMarina } = useMarina();
+  const [showSwitcher, setShowSwitcher] = useState(false);
   const latest = announcements.find((a) => a.status === "sent") ?? announcements[0];
 
   return (
-    <>
+    <div className="relative flex flex-1 flex-col">
       <HeroBanner
         name={activeMarina.name}
         subtitle={activeMarina.location}
         imageUrl={activeMarina.bannerImageUrl}
+        onNameClick={() => setShowSwitcher(true)}
       />
       <ConditionsStrip conditions={activeMarina.conditions} />
 
@@ -69,6 +73,8 @@ export default function HomePage() {
         </span>
         <ChevronRightIcon className="h-3.5 w-3.5 text-ink-soft" />
       </Link>
-    </>
+
+      {showSwitcher && <MarinaSwitcherSheet onClose={() => setShowSwitcher(false)} />}
+    </div>
   );
 }

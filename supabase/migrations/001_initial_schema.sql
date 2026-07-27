@@ -104,6 +104,20 @@ create table if not exists contacts (
 
 create index if not exists contacts_marina_id_idx on contacts(marina_id);
 
+insert into contacts (marina_id, name, role, phone, is_emergency, sort_order) values
+  ('shilshole',     'Marina office',                    'General inquiries',          '(206) 555-0148', false, 0),
+  ('shilshole',     'Operations',                       'Dock & slip questions',      '(206) 555-0172', false, 1),
+  ('shilshole',     'Harbor emergency line',            '24 hours',                   '(206) 555-0199', true,  2),
+  ('fairhaven',     'Marina office',                    'General inquiries',          '(360) 555-0122', false, 0),
+  ('fairhaven',     'Guest dock',                       'Slip & moorage questions',   '(360) 555-0123', false, 1),
+  ('fairhaven',     'Coast Guard Sector Puget Sound',   '24-hour emergency',          '(206) 217-6001', true,  2),
+  ('elliott-bay',   'Marina office',                    'General inquiries',          '(206) 555-0133', false, 0),
+  ('elliott-bay',   'Dock master',                      'Slip & dock questions',      '(206) 555-0134', false, 1),
+  ('elliott-bay',   'Harbor emergency line',            '24 hours',                   '(206) 555-0199', true,  2),
+  ('port-townsend', 'Port Townsend harbormaster',       'General questions',          '(360) 555-0177', false, 0),
+  ('port-townsend', 'Jefferson County Search & Rescue', 'Emergency',                  '(360) 385-2000', true,  1)
+on conflict do nothing;
+
 -- ─────────────────────────────────────────────────────────────
 -- PINNED POSTS
 -- Rules and emergency-info cards pinned to the marina board.
