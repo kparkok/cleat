@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useMarina } from "@/components/member/MarinaProvider";
 import { MarinaSwitcherSheet } from "@/components/member/MarinaSwitcherSheet";
 import { ChevronRightIcon, MarinaIcon } from "@/components/icons";
-
-const BOTTOM_LINKS = ["Notification settings", "Sign out"];
+import { signOut } from "@/lib/auth-db";
 
 export default function YouPage() {
   const { member, marinas, memberMarinas, myPosts } = useMarina();
@@ -102,18 +101,21 @@ export default function YouPage() {
       })}
 
       <div className="mx-5 mb-4">
-        {BOTTOM_LINKS.map((label, i) => (
-          <button
-            key={label}
-            type="button"
-            className={`flex w-full items-center justify-between py-3.5 text-left ${
-              i < BOTTOM_LINKS.length - 1 ? "border-b border-line" : ""
-            }`}
-          >
-            <span className="text-[12.5px] font-semibold text-navy">{label}</span>
-            <ChevronRightIcon className="h-3.5 w-3.5 text-ink-soft" />
-          </button>
-        ))}
+        <button
+          type="button"
+          className="flex w-full items-center justify-between border-b border-line py-3.5 text-left"
+        >
+          <span className="text-[12.5px] font-semibold text-navy">Notification settings</span>
+          <ChevronRightIcon className="h-3.5 w-3.5 text-ink-soft" />
+        </button>
+        <button
+          type="button"
+          onClick={() => signOut()}
+          className="flex w-full items-center justify-between py-3.5 text-left"
+        >
+          <span className="text-[12.5px] font-semibold text-navy">Sign out</span>
+          <ChevronRightIcon className="h-3.5 w-3.5 text-ink-soft" />
+        </button>
       </div>
 
       {showSwitcher && <MarinaSwitcherSheet onClose={() => setShowSwitcher(false)} />}

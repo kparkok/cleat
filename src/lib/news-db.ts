@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { CURRENT_MEMBER_ID } from "./member-db";
+import { getCurrentMemberId } from "./member-db";
 import type {
   Announcement,
   AnnouncementCategory,
@@ -61,8 +61,8 @@ interface DbPostRow {
 
 // ── transform ────────────────────────────────────────────────────────────────
 
-function toPost(row: DbPostRow): CommunityPost {
-  const isMe = row.author_id === CURRENT_MEMBER_ID;
+function toPost(row: DbPostRow, myId: string): CommunityPost {
+  const isMe = row.author_id === myId;
   const authorName = isMe
     ? `@${row.author?.username ?? "me"}`
     : (row.author?.name ?? "Unknown");
@@ -70,7 +70,7 @@ function toPost(row: DbPostRow): CommunityPost {
   const comments: PostComment[] = (row.post_comments ?? [])
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
     .map((c) => {
-      const commentIsMe = c.author_id === CURRENT_MEMBER_ID;
+      const commentIsMe = c.author_id === myId;
       return {
         id: c.id,
         authorName: commentIsMe
@@ -93,7 +93,7 @@ function toPost(row: DbPostRow): CommunityPost {
     visitingFrom: row.visiting_from ?? undefined,
     body: row.body,
     hearts: row.hearts,
-    likedByMe: (row.post_likes ?? []).some((l) => l.member_id === CURRENT_MEMBER_ID),
+    likedByMe: (row.post_likes ?? []).some((l) => l.member_id === myId),
     comments,
     timeAgo: timeAgo(row.created_at),
     date: shortDate(row.created_at),
@@ -111,6 +111,7 @@ const POST_SELECT = `
 `.trim();
 
 export async function fetchCommunityPosts(marinaId: string): Promise<CommunityPost[]> {
+  const myId = await getCurrentMemberId();
   const { data, error } = await supabase
     .from("community_posts")
     .select(POST_SELECT)
@@ -118,19 +119,20 @@ export async function fetchCommunityPosts(marinaId: string): Promise<CommunityPo
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data as unknown as DbPostRow[]).map(toPost);
+  return (data as unknown as DbPostRow[]).map((row) => toPost(row, myId));
 }
 
 /** Fetches only the current member's own posts across all their marinas. */
 export async function fetchMyPosts(): Promise<CommunityPost[]> {
+  const myId = await getCurrentMemberId();
   const { data, error } = await supabase
     .from("community_posts")
     .select(POST_SELECT)
-    .eq("author_id", CURRENT_MEMBER_ID)
+    .eq("author_id", myId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data as unknown as DbPostRow[]).map(toPost);
+  return (data as unknown as DbPostRow[]).map((row) => toPost(row, myId));
 }
 
 export async function dbInsertPost(
@@ -139,11 +141,12 @@ export async function dbInsertPost(
   kind: "member" | "visiting",
   visitingFrom?: string,
 ): Promise<string> {
+  const memberId = await getCurrentMemberId();
   const { data, error } = await supabase
     .from("community_posts")
     .insert({
       marina_id: marinaId,
-      author_id: CURRENT_MEMBER_ID,
+      author_id: memberId,
       kind,
       visiting_from: visitingFrom ?? null,
       body,
@@ -156,43 +159,48 @@ export async function dbInsertPost(
 }
 
 export async function dbUpdatePost(postId: string, body: string): Promise<void> {
+  const memberId = await getCurrentMemberId();
   const { error } = await supabase
     .from("community_posts")
     .update({ body })
     .eq("id", postId)
-    .eq("author_id", CURRENT_MEMBER_ID); // only own posts
+    .eq("author_id", memberId); // only own posts
   if (error) throw error;
 }
 
 export async function dbDeletePost(postId: string): Promise<void> {
+  const memberId = await getCurrentMemberId();
   const { error } = await supabase
     .from("community_posts")
     .delete()
     .eq("id", postId)
-    .eq("author_id", CURRENT_MEMBER_ID); // only own posts
+    .eq("author_id", memberId); // only own posts
   if (error) throw error;
 }
 
 export async function upsertLike(postId: string): Promise<void> {
+  const memberId = await getCurrentMemberId();
   const { error } = await supabase
     .from("post_likes")
-    .insert({ post_id: postId, member_id: CURRENT_MEMBER_ID });
+    .insert({ post_id: postId, member_id: memberId });
   if (error && error.code !== "23505") throw error; // 23505 = already liked
 }
 
 export async function deleteLike(postId: string): Promise<void> {
+  const memberId = await getCurrentMemberId();
   const { error } = await supabase
     .from("post_likes")
     .delete()
     .eq("post_id", postId)
-    .eq("member_id", CURRENT_MEMBER_ID);
+    .eq("member_id", memberId);
   if (error) throw error;
 }
 
 export async function dbInsertComment(postId: string, body: string): Promise<string> {
+  const memberId = await getCurrentMemberId();
   const { data, error } = await supabase
     .from("post_comments")
-    .insert({ post_id: postId, author_id: CURRENT_MEMBER_ID, body })
+    .insert({ post_id: postId, author_id: memberId, body })
     .select("id")
     .single();
   if (error) throw error;
@@ -200,26 +208,28 @@ export async function dbInsertComment(postId: string, body: string): Promise<str
 }
 
 export async function dbUpdateComment(commentId: string, body: string): Promise<void> {
+  const memberId = await getCurrentMemberId();
   const { error } = await supabase
     .from("post_comments")
     .update({ body })
     .eq("id", commentId)
-    .eq("author_id", CURRENT_MEMBER_ID);
+    .eq("author_id", memberId);
   if (error) throw error;
 }
 
 export async function dbDeleteComment(commentId: string): Promise<void> {
+  const memberId = await getCurrentMemberId();
   const { error } = await supabase
     .from("post_comments")
     .delete()
     .eq("id", commentId)
-    .eq("author_id", CURRENT_MEMBER_ID);
+    .eq("author_id", memberId);
   if (error) throw error;
 }
 
 // ── marina board ────────────────────────────────────────────────────────────
 
-interface DbAnnouncementRow {
+export interface DbAnnouncementRow {
   id: string;
   title: string;
   body: string;
@@ -233,6 +243,20 @@ interface DbPinnedRow {
   title: string;
   meta: string | null;
   tone: "default" | "alert";
+}
+
+/** Shared row → Announcement transform — used by the member board (sent-only) and the staff dashboard (all statuses). */
+export function toAnnouncement(a: DbAnnouncementRow): Announcement {
+  return {
+    id: a.id,
+    title: a.title,
+    body: a.body,
+    category: a.category as AnnouncementCategory,
+    status: a.status as AnnouncementStatus,
+    date: a.published_at
+      ? new Date(a.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : "",
+  };
 }
 
 export async function fetchMarinaBoardData(marinaId: string): Promise<{
@@ -256,16 +280,7 @@ export async function fetchMarinaBoardData(marinaId: string): Promise<{
   if (annResult.error) throw annResult.error;
   if (pinnedResult.error) throw pinnedResult.error;
 
-  const announcements: Announcement[] = (annResult.data as DbAnnouncementRow[]).map((a) => ({
-    id: a.id,
-    title: a.title,
-    body: a.body,
-    category: a.category as AnnouncementCategory,
-    status: a.status as AnnouncementStatus,
-    date: a.published_at
-      ? new Date(a.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-      : "",
-  }));
+  const announcements: Announcement[] = (annResult.data as DbAnnouncementRow[]).map(toAnnouncement);
 
   const pinnedPosts: PinnedPost[] = (pinnedResult.data as DbPinnedRow[]).map((p) => ({
     id: p.id,
