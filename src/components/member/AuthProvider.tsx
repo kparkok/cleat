@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { findLinkedMemberId } from "@/lib/auth-db";
+import { findLinkedMember, type MemberRole } from "@/lib/auth-db";
 import { describeError } from "@/lib/errors";
 
 // Must match MarinaProvider's STORAGE_KEY — cleared on sign-out so the next
@@ -14,7 +14,8 @@ const MARINA_STORAGE_KEY = "cleat:member-marinas";
 interface AuthContextValue {
   user: User | null;
   memberId: string | null;
-  setMemberId: (id: string) => void;
+  role: MemberRole | null;
+  setMemberId: (id: string, role?: MemberRole) => void;
   loading: boolean;
 }
 
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
+  const [role, setRole] = useState<MemberRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,23 +41,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const nextUser = session?.user ?? null;
       let nextMemberId: string | null = null;
+      let nextRole: MemberRole | null = null;
 
       if (nextUser) {
-        console.log("[AuthProvider] → calling findLinkedMemberId(", nextUser.id, ")");
+        console.log("[AuthProvider] → calling findLinkedMember(", nextUser.id, ")");
         try {
-          nextMemberId = await findLinkedMemberId(nextUser.id);
-          console.log("[AuthProvider] ← findLinkedMemberId resolved:", nextMemberId);
+          const linked = await findLinkedMember(nextUser.id);
+          nextMemberId = linked?.id ?? null;
+          nextRole = linked?.role ?? null;
+          console.log("[AuthProvider] ← findLinkedMember resolved:", linked);
         } catch (err) {
-          console.error("[AuthProvider] ← findLinkedMemberId THREW:", describeError(err));
+          console.error("[AuthProvider] ← findLinkedMember THREW:", describeError(err));
         }
       } else {
-        console.log("[AuthProvider] no user on this session — skipping findLinkedMemberId");
+        console.log("[AuthProvider] no user on this session — skipping findLinkedMember");
       }
 
       console.log("[AuthProvider] setUser(", nextUser?.id ?? null, ")");
       setUser(nextUser);
-      console.log("[AuthProvider] setMemberId(", nextMemberId, ")");
+      console.log("[AuthProvider] setMemberId(", nextMemberId, ") setRole(", nextRole, ")");
       setMemberId(nextMemberId);
+      setRole(nextRole);
 
       if (!resolvedOnce) {
         resolvedOnce = true;
@@ -102,10 +108,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  console.log("[AuthProvider] render — loading:", loading, "user:", user?.id ?? null, "memberId:", memberId);
+  console.log(
+    "[AuthProvider] render — loading:",
+    loading,
+    "user:",
+    user?.id ?? null,
+    "memberId:",
+    memberId,
+    "role:",
+    role,
+  );
+
+  // Used by NewMemberFlow right after createMemberProfile() — brand-new
+  // profiles always start with the DB default role ('member'), so the role
+  // param is optional and only meaningful for callers that already know
+  // otherwise (none yet).
+  function setMemberIdAndRole(id: string, nextRole: MemberRole = "member") {
+    setMemberId(id);
+    setRole(nextRole);
+  }
 
   return (
-    <AuthContext.Provider value={{ user, memberId, setMemberId, loading }}>
+    <AuthContext.Provider value={{ user, memberId, role, setMemberId: setMemberIdAndRole, loading }}>
       {children}
     </AuthContext.Provider>
   );

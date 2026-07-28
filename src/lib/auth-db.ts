@@ -27,26 +27,33 @@ export async function signOut(): Promise<void> {
   }
 }
 
+export type MemberRole = "member" | "staff";
+
+export interface LinkedMember {
+  id: string;
+  role: MemberRole;
+}
+
 /**
  * Does this auth account already have a linked `members` row? Read-only —
- * never creates or claims anything. Returns the member id if linked, else
- * null (meaning: this is a first-time sign-in and needs the new-member
+ * never creates or claims anything. Returns the member id + role if linked,
+ * else null (meaning: this is a first-time sign-in and needs the new-member
  * flow — see NewMemberFlow).
  */
-export async function findLinkedMemberId(userId: string): Promise<string | null> {
+export async function findLinkedMember(userId: string): Promise<LinkedMember | null> {
   // TEMPORARY DEBUG LOGGING — remove once the stuck-loading bug is found.
-  console.log("[auth-db] findLinkedMemberId: querying members where auth_user_id =", userId);
+  console.log("[auth-db] findLinkedMember: querying members where auth_user_id =", userId);
   const { data, error } = await supabase
     .from("members")
-    .select("id")
+    .select("id, role")
     .eq("auth_user_id", userId)
     .maybeSingle();
   if (error) {
-    console.error("[auth-db] findLinkedMemberId query failed:", describeError(error));
+    console.error("[auth-db] findLinkedMember query failed:", describeError(error));
     throw error;
   }
-  console.log("[auth-db] findLinkedMemberId: query settled", { data });
-  return data?.id ?? null;
+  console.log("[auth-db] findLinkedMember: query settled", { data });
+  return data as LinkedMember | null;
 }
 
 /**
