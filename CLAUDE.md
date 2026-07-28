@@ -8,8 +8,9 @@ and a desktop **staff portal**. **Phase 1 MVP is functionally complete**:
 both sides run on real Supabase data (PostgreSQL + PostgREST), with real
 Supabase Auth (magic link) gating the member app end to end and real
 role-based access control gating the staff portal. The one remaining
-UI-only piece is the announcement composer (see Route structure below), and
-Row Level Security is the immediate next priority (see Build status).
+UI-only piece is the announcement composer (see Route structure below).
+Row Level Security is underway table by table — see Row Level Security
+below and Build status for what's left.
 
 Design reference: `design/cleat-full-overview.html` (all 10 original
 screens, colors, typography, component style), `design/cleat-home-variants.html`
@@ -143,6 +144,52 @@ Staff side (partial):
   way. Revisit whether to remove these fallbacks entirely once RLS is in
   place and stable.
 
+## Row Level Security
+
+Deferred at Stage 1 pending real auth (see `002_auth.sql` below), now
+underway table by table since both real auth and staff role-gating exist.
+Each migration is written and reviewed against the app's actual call
+sites, then run by hand in the Supabase SQL editor — there's no DDL access
+via the anon key, so nothing here executes migrations itself. Applied so
+far, in order:
+
+- **`003_rls_marinas.sql`** — `marinas`: public SELECT, staff-only
+  INSERT/UPDATE.
+- **`004_rls_marina_hours_amenities.sql`** — `marina_hours`: public
+  SELECT, staff-only INSERT/UPDATE. `amenities`: public SELECT; any linked
+  member can INSERT with `verified = false` (a member-submitted
+  suggestion); only staff can INSERT with `verified = true` or UPDATE the
+  `verified` flag (two permissive INSERT policies, OR'd together by
+  Postgres).
+- **`005_rls_contacts.sql`** — `contacts`: public SELECT, staff-only
+  INSERT/UPDATE.
+- **`006_rls_marina_memberships.sql`** — `marina_memberships`: SELECT
+  scoped to a member's own rows, or all rows for staff. INSERT/UPDATE
+  scoped to a member's own row, restricted to the `role`
+  (`'home'|'visiting'`) and `visited_dates` columns only — the staff-facing
+  columns (`slip`, `usage_type`, `verification_status`,
+  `verification_detail`) can only be set at INSERT or changed at UPDATE by
+  staff, enforced via a self-referential subquery so a member can't
+  self-verify or self-assign a slip through their own join/switch request.
+
+**No RLS yet — still fully open via the anon key**: `members`,
+`pinned_posts`, `announcements`, `community_posts`, `post_likes`,
+`post_comments`. `members` is the most consequential of these: every
+policy above resolves "is this the caller" or "is this caller staff" via a
+subquery against `members`, and it's also the table `StaffGate`'s own role
+check reads directly — so until `members` has RLS, the anon key can still
+read or write `role`/`auth_user_id` on any row directly, regardless of
+what the UI shows. Closing that gap is the next RLS migration (see Build
+status).
+
+**Staff is global, not per-marina, in every policy so far.** `members.role`
+is a single column with no marina scope, so every staff-only policy above
+treats any `role = 'staff'` member as staff for *all* marinas, not just
+one. This is a known, deliberate limitation carried through each
+migration's own header comment — moving to a per-marina staff scope on
+`marina_memberships` is planned as a separate follow-up (see Build status),
+not something these migrations attempt to solve.
+
 ## MarinaProvider
 
 `src/components/member/MarinaProvider.tsx` — client-side React Context
@@ -249,10 +296,12 @@ landing in the app with the right member/marina data).
   since `role` is `null` until linked — the member-side `AuthGate` then
   decides what they see, including `NewMemberFlow` if needed); else render
   the staff shell (`Sidebar` + page content).
-- This is an **application-layer** gate only — a non-staff member can't
-  reach the staff *UI*, but Row Level Security is still off (see below), so
-  the anon key itself has no role awareness. RLS is the next priority
-  specifically because of this gap.
+- This is still, in part, an **application-layer** gate — a non-staff
+  member can't reach the staff *UI*, and RLS now covers several tables
+  (see Row Level Security below), but `members` itself — the table
+  `role`-gating depends on — doesn't have RLS yet, so the anon key can
+  still read or write `role`/`auth_user_id` directly regardless of what
+  the UI shows. Closing that gap is the next RLS migration.
 
 ### Member row linking model
 
@@ -281,12 +330,9 @@ rather than assuming a SQL editor run succeeded.) Adds:
    `StaffGate` (see Staff access control above) to gate the staff portal.
 2. `members.auth_user_id` — the soft link described above.
 
-Deliberately does **not** add Row Level Security — every table is exactly
-as open via the anon key as before this migration, regardless of `role` or
-auth state. Flagged in the migration's own header comment as deferred, and
-now that both real auth and staff gating exist, RLS is the top-priority
-next task (see Build status) — right now `role` only gates the *UI*, not
-the database itself.
+Deliberately does **not** add Row Level Security itself — that started
+later, table by table, once both real auth and staff gating existed (see
+Row Level Security above).
 
 ### Known gotcha: sandboxed link scanners
 
@@ -360,17 +406,21 @@ session resolution. TypeScript clean throughout.
 
 **Next planned work, in priority order:**
 
-1. **Row Level Security** — currently disabled on every table, left off
-   deliberately at Stage 1 pending real auth. Real auth (and staff
-   role-gating) now exist, so this is the immediate next task: right now
-   the anon key has unrestricted read/write access to everything regardless
-   of `role` or sign-in state — `StaffGate` only gates the UI, not the
-   database.
+1. **Row Level Security — in progress.** Done: `marinas`, `marina_hours`,
+   `amenities`, `contacts`, `marina_memberships` (see Row Level Security
+   above for what each policy allows). Still fully open via the anon key:
+   `members`, `pinned_posts`, `announcements`, `community_posts`,
+   `post_likes`, `post_comments`. `members` is the most urgent of these —
+   it's the table `StaffGate`'s role check and every other policy's
+   staff/self check depend on, so until it has RLS, `role` and
+   `auth_user_id` are still writable by anyone via the anon key regardless
+   of what the UI shows.
 2. **Public "Marina Staff sign-up" claim flow** — after RLS, move `role`
    from a single global column on `members` to a per-marina scope on
    `marina_memberships` (a member could plausibly be staff at one marina
-   and a regular member at another), and build a real sign-up path for
-   staff accounts instead of the manual SQL-editor role flip used for
+   and a regular member at another — every RLS policy so far treats staff
+   as global, see Row Level Security above), and build a real sign-up path
+   for staff accounts instead of the manual SQL-editor role flip used for
    testing.
 3. Also deferred: PWA manifest verification (installability hasn't been
    re-tested since the auth work), NOAA weather API integration for
