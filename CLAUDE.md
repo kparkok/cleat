@@ -131,9 +131,17 @@ Staff side (partial):
 - The announcement composer (`(staff)/announcements/new/`) — no backend at
   all, see Route structure above.
 - `src/lib/data.ts` still exports `sampleMarinas`, `defaultMemberMarinas`,
-  and `currentMember` as fallback seeds used by `MarinaProvider`'s initial
-  state and error paths — referenced there but not the source of truth at
-  runtime.
+  `currentMember`, and `communityPosts` as fallback seeds used by
+  `MarinaProvider`'s initial state and error paths — referenced there but
+  not the source of truth at runtime. **Not a pure safety net**: several of
+  these are the actual `useState` initial values, so a silently-failing
+  fetch (e.g. a broken RLS policy) leaves the seed data in place
+  indefinitely with a plausible-looking UI, not an error state. All six
+  fetch sites now log the real error via `describeError()` on failure (see
+  MarinaProvider below) specifically so this can't hide a broken policy
+  during RLS testing — but the fallback data itself is still served either
+  way. Revisit whether to remove these fallbacks entirely once RLS is in
+  place and stable.
 
 ## MarinaProvider
 
@@ -157,6 +165,14 @@ design points:
   DB failure.
 - All mutations update both `posts` (active marina feed) and `myPosts`
   (member's cross-marina post list) where relevant.
+- **All six data-fetching effects** (`fetchMarinas`, `fetchMemberData`,
+  `fetchMyPosts`, `fetchCommunityPosts`, `fetchMarinaBoardData`,
+  `fetchContacts`) now `console.error(describeError(err), ...)` on failure
+  before doing whatever they already did (leaving seed/initial state in
+  place, or explicitly re-populating `lib/data.ts` mock data for
+  `myPosts`/`posts`). Added so an RLS-denied request is visible in the
+  console during RLS testing instead of silently rendering plausible mock
+  data with no error indicator at all — see the `lib/data.ts` note above.
 
 Exposed context: `member`, `marinas`, `activeMarina`, `memberMarinas`,
 `switchMarina`, `viewMarina`, `posts`, `myPosts`, `postsLoading`,
@@ -332,7 +348,12 @@ session resolution. TypeScript clean throughout.
   UI-only — `submit()` navigates to `/dashboard` but writes nothing.
 - `MarinaProvider.tsx` still imports `sampleMarinas`, `defaultMemberMarinas`,
   `currentMember`, `communityPosts` from `lib/data.ts` as initial/error-path
-  state, used only before the real Supabase fetch resolves or if it fails.
+  state. A failed fetch can leave this mock data in place indefinitely with
+  no visible error in the UI — all six fetch sites now log via
+  `describeError()` so this is at least visible in the console (worth doing
+  before RLS work specifically so a broken policy doesn't hide silently
+  behind plausible-looking fallback data), but the fallback behavior itself
+  is unchanged.
 - Staff routes are still scoped to a single hardcoded `STAFF_MARINA_ID`
   ("shilshole") in `staff-db.ts` — there's no per-staff-account marina
   scoping yet (see next planned work below).
