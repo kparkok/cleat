@@ -169,8 +169,20 @@ far, in order:
   (`'home'|'visiting'`) and `visited_dates` columns only — the staff-facing
   columns (`slip`, `usage_type`, `verification_status`,
   `verification_detail`) can only be set at INSERT or changed at UPDATE by
-  staff, enforced via a self-referential subquery so a member can't
-  self-verify or self-assign a slip through their own join/switch request.
+  staff.
+- **`007_fix_marina_memberships_update.sql`** — fixes a real bug 006
+  shipped with: the member UPDATE policy enforced "staff-only columns
+  unchanged" via a self-referential subquery
+  (`verification_status = (select ... from marina_memberships where id = ...)`),
+  which is itself subject to `marina_memberships`'s own RLS mid-UPDATE on
+  that exact row — a fragile pattern that broke `demoteHomeMembership()`
+  (switching home marinas), rejecting a legitimate update that never even
+  touched those columns. Replaced with a `BEFORE UPDATE` trigger
+  (`marina_memberships_protect_staff_fields_trg`) that force-resets the
+  four staff-only columns to their old values for non-staff callers —
+  reads `OLD`/`NEW` directly, no subquery, no recursion risk. Confirmed
+  fixed: verified directly in SQL via role/JWT-claim impersonation, then
+  re-tested switching home marinas in the app.
 
 **No RLS yet — still fully open via the anon key**: `members`,
 `pinned_posts`, `announcements`, `community_posts`, `post_likes`,
@@ -281,7 +293,13 @@ landing in the app with the right member/marina data).
 - **`src/lib/errors.ts`** — `describeError()`. `PostgrestError` isn't an
   `Error` instance and doesn't stringify usefully via plain
   `console.error`/`JSON.stringify` — this pulls `message`/`code`/`details`/`hint`
-  out explicitly. Used at every Supabase call site that can fail.
+  out explicitly. Used at every Supabase call site that can fail. Uses
+  `null` rather than `undefined` for missing fields, and falls back to a
+  raw dump if neither `message` nor `code` is present — an all-`undefined`
+  result renders as an uninformative `{}` in some logging surfaces (`JSON.stringify`
+  drops `undefined` keys), which is what happened when
+  `demoteHomeMembership()`'s RLS rejection first surfaced (see Row Level
+  Security's `007_fix_marina_memberships_update.sql` entry).
 
 ### Staff access control
 
