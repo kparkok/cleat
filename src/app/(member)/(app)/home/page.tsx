@@ -7,7 +7,6 @@ import { ConditionsStrip } from "@/components/member/ConditionsStrip";
 import { MarinaSwitcherSheet } from "@/components/member/MarinaSwitcherSheet";
 import { useMarina } from "@/components/member/MarinaProvider";
 import { ChevronRightIcon, NewsIcon, UserIcon } from "@/components/icons";
-import { announcements } from "@/lib/data";
 
 const QUICK_ACTIONS = [
   { href: "/news", label: "Announcements", Icon: NewsIcon },
@@ -15,9 +14,11 @@ const QUICK_ACTIONS = [
 ];
 
 export default function HomePage() {
-  const { activeMarina } = useMarina();
+  const { activeMarina, boardAnnouncements } = useMarina();
   const [showSwitcher, setShowSwitcher] = useState(false);
-  const latest = announcements.find((a) => a.status === "sent") ?? announcements[0];
+  // fetchMarinaBoardData already filters to status "sent" and orders newest
+  // first, so the first entry is the latest published announcement.
+  const latest = boardAnnouncements[0];
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -29,20 +30,22 @@ export default function HomePage() {
       />
       <ConditionsStrip conditions={activeMarina.conditions} />
 
-      <Link
-        href="/news"
-        className="mx-5 mt-4 flex items-start gap-2.5 rounded-xl border border-line bg-white p-3.5 transition-colors hover:border-dock"
-      >
-        <span className="mt-[5px] h-2 w-2 shrink-0 rounded-full bg-coral" />
-        <span>
-          <span className="block text-[13.5px] font-semibold text-navy">
-            {latest.title}
+      {latest && (
+        <Link
+          href="/news"
+          className="mx-5 mt-4 flex items-start gap-2.5 rounded-xl border border-line bg-white p-3.5 transition-colors hover:border-dock"
+        >
+          <span className="mt-[5px] h-2 w-2 shrink-0 rounded-full bg-coral" />
+          <span>
+            <span className="block text-[13.5px] font-semibold text-navy">
+              {latest.title}
+            </span>
+            <span className="mt-0.5 block text-[11.5px] leading-snug text-ink-soft">
+              {latest.body}
+            </span>
           </span>
-          <span className="mt-0.5 block text-[11.5px] leading-snug text-ink-soft">
-            {latest.body}
-          </span>
-        </span>
-      </Link>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-2.5 px-5 pb-1.5 pt-4">
         {QUICK_ACTIONS.map(({ href, label, Icon }) => (

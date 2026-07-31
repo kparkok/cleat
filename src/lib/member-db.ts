@@ -24,7 +24,7 @@ export async function getCurrentMemberId(): Promise<string> {
     .eq("auth_user_id", session.user.id)
     .single();
   if (error) {
-    console.error("[member-db] getCurrentMemberId query failed:", describeError(error));
+    console.error("[member-db] getCurrentMemberId query failed:", describeError(error), error);
     throw error;
   }
   return (data as { id: string }).id;
@@ -43,7 +43,7 @@ export async function fetchMemberData(): Promise<{
     .single();
 
   if (error) {
-    console.error("[member-db] fetchMemberData query failed:", describeError(error));
+    console.error("[member-db] fetchMemberData query failed:", describeError(error), error);
     throw error;
   }
 
@@ -77,7 +77,9 @@ export async function demoteHomeMembership(today: string): Promise<void> {
     .eq("role", "home");
 
   if (error) {
-    console.error("[member-db] demoteHomeMembership failed:", describeError(error));
+    console.error("[member-db] demoteHomeMembership failed:", describeError(error), error, {
+      memberId,
+    });
     throw error;
   }
 }
@@ -101,7 +103,7 @@ export async function upsertMembership(
   );
 
   if (error) {
-    console.error("[member-db] upsertMembership failed:", describeError(error), {
+    console.error("[member-db] upsertMembership failed:", describeError(error), error, {
       memberId,
       marinaId,
       role,

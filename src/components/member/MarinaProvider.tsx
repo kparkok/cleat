@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { communityPosts, currentMember, defaultMemberMarinas, sampleMarinas } from "@/lib/data";
+import { describeError } from "@/lib/errors";
 import {
   demoteHomeMembership,
   fetchMemberData,
@@ -117,7 +118,9 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchMarinas()
       .then(setMarinas)
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[MarinaProvider] fetchMarinas failed — falling back to seed marinas:", describeError(err));
+      });
   }, []);
 
   useEffect(() => {
@@ -126,14 +129,17 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
         setMember(m);
         setMemberMarinas(memberships);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[MarinaProvider] fetchMemberData failed — falling back to seed member/memberships:", describeError(err));
+      });
   }, []);
 
   // Member's own posts don't change when the active marina changes.
   useEffect(() => {
     fetchMyPosts()
       .then(setMyPosts)
-      .catch(() => {
+      .catch((err) => {
+        console.error("[MarinaProvider] fetchMyPosts failed — falling back to seed posts:", describeError(err));
         setMyPosts(communityPosts.filter((p) => p.authorIsMe));
       });
   }, []);
@@ -180,7 +186,8 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
         setPosts(data);
         setPostsLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("[MarinaProvider] fetchCommunityPosts failed — falling back to seed posts:", describeError(err), { activeMarinaId });
         setPosts(communityPosts.filter((p) => p.marinaId === activeMarinaId));
         setPostsLoading(false);
       });
@@ -193,7 +200,9 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
         setBoardAnnouncements(announcements);
         setBoardPinned(pinnedPosts);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[MarinaProvider] fetchMarinaBoardData failed:", describeError(err), { activeMarinaId });
+      });
   }, [hydrated, activeMarinaId]);
 
   useEffect(() => {
@@ -204,7 +213,8 @@ export function MarinaProvider({ children }: { children: ReactNode }) {
         setContacts(data);
         setContactsLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("[MarinaProvider] fetchContacts failed:", describeError(err), { activeMarinaId });
         setContactsLoading(false);
       });
   }, [hydrated, activeMarinaId]);

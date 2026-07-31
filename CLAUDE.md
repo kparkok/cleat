@@ -4,9 +4,13 @@
 
 Cleat is a member-experience platform for marinas — for any boat owner, not
 just liveaboards. It has two distinct sides: a mobile-first **member app**
-and a desktop **staff portal**. This is the Phase 1 MVP: real screens and
-layouts, with the member side fully wired to Supabase (including real auth)
-and the staff dashboard/members list also on Supabase.
+and a desktop **staff portal**. **Phase 1 MVP is functionally complete**:
+both sides run on real Supabase data (PostgreSQL + PostgREST), with real
+Supabase Auth (magic link) gating the member app end to end and real
+role-based access control gating the staff portal. The one remaining
+UI-only piece is the announcement composer (see Route structure below).
+Row Level Security is underway table by table — see Row Level Security
+below and Build status for what's left.
 
 Design reference: `design/cleat-full-overview.html` (all 10 original
 screens, colors, typography, component style), `design/cleat-home-variants.html`
@@ -77,9 +81,10 @@ Two route groups under `src/app/`, each with its own layout:
     amenities grid split into staff-verified (solid tiles) and
     member-submitted (dashed tiles), "Suggest an amenity" prompt (UI only,
     doesn't persist).
-- **`(staff)`** — desktop sidebar layout (`src/components/staff/Sidebar.tsx`).
-  No auth gate yet — see Authentication below, staff role-gating is the next
-  planned work.
+- **`(staff)`** — desktop sidebar layout (`src/components/staff/Sidebar.tsx`),
+  wrapped in its own `AuthProvider` → `StaffGate` (see Authentication below —
+  nothing here renders unless the signed-in member's `role` is `'staff'`;
+  everyone else is bounced to the member app).
   - `dashboard/` — stat cards + recent announcements table. Supabase-backed
     via `src/lib/staff-db.ts`'s `fetchDashboardData()`.
   - `members/` — member list with usage type + verification status
@@ -127,9 +132,75 @@ Staff side (partial):
 - The announcement composer (`(staff)/announcements/new/`) — no backend at
   all, see Route structure above.
 - `src/lib/data.ts` still exports `sampleMarinas`, `defaultMemberMarinas`,
-  and `currentMember` as fallback seeds used by `MarinaProvider`'s initial
-  state and error paths — referenced there but not the source of truth at
-  runtime.
+  `currentMember`, and `communityPosts` as fallback seeds used by
+  `MarinaProvider`'s initial state and error paths — referenced there but
+  not the source of truth at runtime. **Not a pure safety net**: several of
+  these are the actual `useState` initial values, so a silently-failing
+  fetch (e.g. a broken RLS policy) leaves the seed data in place
+  indefinitely with a plausible-looking UI, not an error state. All six
+  fetch sites now log the real error via `describeError()` on failure (see
+  MarinaProvider below) specifically so this can't hide a broken policy
+  during RLS testing — but the fallback data itself is still served either
+  way. Revisit whether to remove these fallbacks entirely once RLS is in
+  place and stable.
+
+## Row Level Security
+
+Deferred at Stage 1 pending real auth (see `002_auth.sql` below), now
+underway table by table since both real auth and staff role-gating exist.
+Each migration is written and reviewed against the app's actual call
+sites, then run by hand in the Supabase SQL editor — there's no DDL access
+via the anon key, so nothing here executes migrations itself. Applied so
+far, in order:
+
+- **`003_rls_marinas.sql`** — `marinas`: public SELECT, staff-only
+  INSERT/UPDATE.
+- **`004_rls_marina_hours_amenities.sql`** — `marina_hours`: public
+  SELECT, staff-only INSERT/UPDATE. `amenities`: public SELECT; any linked
+  member can INSERT with `verified = false` (a member-submitted
+  suggestion); only staff can INSERT with `verified = true` or UPDATE the
+  `verified` flag (two permissive INSERT policies, OR'd together by
+  Postgres).
+- **`005_rls_contacts.sql`** — `contacts`: public SELECT, staff-only
+  INSERT/UPDATE.
+- **`006_rls_marina_memberships.sql`** — `marina_memberships`: SELECT
+  scoped to a member's own rows, or all rows for staff. INSERT/UPDATE
+  scoped to a member's own row, restricted to the `role`
+  (`'home'|'visiting'`) and `visited_dates` columns only — the staff-facing
+  columns (`slip`, `usage_type`, `verification_status`,
+  `verification_detail`) can only be set at INSERT or changed at UPDATE by
+  staff.
+- **`007_fix_marina_memberships_update.sql`** — fixes a real bug 006
+  shipped with: the member UPDATE policy enforced "staff-only columns
+  unchanged" via a self-referential subquery
+  (`verification_status = (select ... from marina_memberships where id = ...)`),
+  which is itself subject to `marina_memberships`'s own RLS mid-UPDATE on
+  that exact row — a fragile pattern that broke `demoteHomeMembership()`
+  (switching home marinas), rejecting a legitimate update that never even
+  touched those columns. Replaced with a `BEFORE UPDATE` trigger
+  (`marina_memberships_protect_staff_fields_trg`) that force-resets the
+  four staff-only columns to their old values for non-staff callers —
+  reads `OLD`/`NEW` directly, no subquery, no recursion risk. Confirmed
+  fixed: verified directly in SQL via role/JWT-claim impersonation, then
+  re-tested switching home marinas in the app.
+
+**No RLS yet — still fully open via the anon key**: `members`,
+`pinned_posts`, `announcements`, `community_posts`, `post_likes`,
+`post_comments`. `members` is the most consequential of these: every
+policy above resolves "is this the caller" or "is this caller staff" via a
+subquery against `members`, and it's also the table `StaffGate`'s own role
+check reads directly — so until `members` has RLS, the anon key can still
+read or write `role`/`auth_user_id` on any row directly, regardless of
+what the UI shows. Closing that gap is the next RLS migration (see Build
+status).
+
+**Staff is global, not per-marina, in every policy so far.** `members.role`
+is a single column with no marina scope, so every staff-only policy above
+treats any `role = 'staff'` member as staff for *all* marinas, not just
+one. This is a known, deliberate limitation carried through each
+migration's own header comment — moving to a per-marina staff scope on
+`marina_memberships` is planned as a separate follow-up (see Build status),
+not something these migrations attempt to solve.
 
 ## MarinaProvider
 
@@ -153,6 +224,14 @@ design points:
   DB failure.
 - All mutations update both `posts` (active marina feed) and `myPosts`
   (member's cross-marina post list) where relevant.
+- **All six data-fetching effects** (`fetchMarinas`, `fetchMemberData`,
+  `fetchMyPosts`, `fetchCommunityPosts`, `fetchMarinaBoardData`,
+  `fetchContacts`) now `console.error(describeError(err), ...)` on failure
+  before doing whatever they already did (leaving seed/initial state in
+  place, or explicitly re-populating `lib/data.ts` mock data for
+  `myPosts`/`posts`). Added so an RLS-denied request is visible in the
+  console during RLS testing instead of silently rendering plausible mock
+  data with no error indicator at all — see the `lib/data.ts` note above.
 
 Exposed context: `member`, `marinas`, `activeMarina`, `memberMarinas`,
 `switchMarina`, `viewMarina`, `posts`, `myPosts`, `postsLoading`,
@@ -162,10 +241,10 @@ Exposed context: `member`, `marinas`, `activeMarina`, `memberMarinas`,
 
 ## Authentication
 
-Real Supabase Auth (magic link / passwordless email) is wired in for the
-member side and working — sign-in itself is confirmed end-to-end. The
-brand-new-member flow (username + home marina → row creation) is built but
-**not yet fully re-verified end-to-end** after the last fix (see below).
+Real Supabase Auth (magic link / passwordless email) is wired in and
+**confirmed working end to end** for the member side, including the
+brand-new-member flow (username → home marina choice → row creation →
+landing in the app with the right member/marina data).
 
 - **`src/lib/supabase.ts`** — plain `createClient()`, client-side only.
   Implicit flow, `detectSessionInUrl: true` (both are supabase-js defaults —
@@ -173,19 +252,25 @@ brand-new-member flow (username + home marina → row creation) is built but
   route is a client component; would need it if server components/route
   handlers ever need the session.
 - **`src/lib/auth-db.ts`** — `sendMagicLink(email)`, `signOut()`,
-  `findLinkedMemberId(userId)` (read-only — does a member row already have
-  this `auth_user_id`? Never creates or claims anything), `createMemberProfile({userId, email, username})`
-  (creates a brand-new row for a first-time sign-in).
+  `findLinkedMember(userId)` (read-only — does a member row already have
+  this `auth_user_id`? Returns `{id, role}` if so, else `null`. Never
+  creates or claims anything), `createMemberProfile({userId, email, username})`
+  (creates a brand-new row for a first-time sign-in, always with the DB
+  default `role: 'member'`).
 - **`src/components/member/AuthProvider.tsx`** — session state via
   `supabase.auth.getSession()` + `onAuthStateChange`. Exposes `user`,
   `memberId` (this account's real `members.id`, or `null` if not yet
-  linked), `setMemberId`, `loading`. `memberId` isn't exposed until the
-  link lookup has resolved for that session, so `MarinaProvider` can never
-  mount before a member row is guaranteed to exist (or before we know it
-  doesn't, and need `NewMemberFlow` instead). **Still has verbose temporary
-  `console.log`/`console.error` instrumentation** added while debugging the
-  stuck-loading and insert-failure bugs — strip once the flow is fully
-  trusted.
+  linked), `role` (`'member' | 'staff' | null`, resolved in the same query
+  as `memberId`), `setMemberId(id, role?)`, `loading`. `memberId`/`role`
+  aren't exposed until the link lookup has resolved for that session, so
+  `MarinaProvider`/`StaffGate` can never mount before a member row is
+  guaranteed to exist (or before we know it doesn't, and need
+  `NewMemberFlow` instead). Mounted once per route group — `(member)` and
+  `(staff)` each get their own `AuthProvider` instance, both reading the
+  same underlying Supabase session independently. **Still has verbose
+  temporary `console.log`/`console.error` instrumentation** added while
+  debugging the stuck-loading and insert-failure bugs — strip once the flow
+  is fully trusted.
 - **`src/components/member/AuthGate.tsx`** — the real entry point to the
   member app, mounted at the `(member)` layout level (wraps every member
   route including `/onboarding`). Three-way branch: `loading` → spinner;
@@ -203,11 +288,38 @@ brand-new-member flow (username + home marina → row creation) is built but
   here". Only after both steps does it call `createMemberProfile()` then
   `upsertMembership()` — nothing is written before both are chosen. A
   username collision sends the user back to the username step with a clear
-  message rather than silently suffixing it.
+  message rather than silently suffixing it. **Confirmed working end to
+  end** (magic link → username → marina choice → landing in the app).
 - **`src/lib/errors.ts`** — `describeError()`. `PostgrestError` isn't an
   `Error` instance and doesn't stringify usefully via plain
   `console.error`/`JSON.stringify` — this pulls `message`/`code`/`details`/`hint`
-  out explicitly. Used at every Supabase call site that can fail.
+  out explicitly. Used at every Supabase call site that can fail. Uses
+  `null` rather than `undefined` for missing fields, and falls back to a
+  raw dump if neither `message` nor `code` is present — an all-`undefined`
+  result renders as an uninformative `{}` in some logging surfaces (`JSON.stringify`
+  drops `undefined` keys), which is what happened when
+  `demoteHomeMembership()`'s RLS rejection first surfaced (see Row Level
+  Security's `007_fix_marina_memberships_update.sql` entry).
+
+### Staff access control
+
+- **`src/components/staff/StaffGate.tsx`** — the real entry point to the
+  staff portal, mirroring `AuthGate` on the member side but checking `role`
+  instead of just linkage. Mounted at the `(staff)` layout level, wrapped in
+  its own `AuthProvider`. Branches: `loading` → spinner; `!user` →
+  `SignInScreen` (reused as-is from the member side, wrapped in a
+  `min-h-dvh` flex container since it normally relies on the member
+  layout's phone-frame column to stretch into); `user && role !== 'staff'`
+  → redirect to `/home` (a signed-in-but-unlinked account also lands here,
+  since `role` is `null` until linked — the member-side `AuthGate` then
+  decides what they see, including `NewMemberFlow` if needed); else render
+  the staff shell (`Sidebar` + page content).
+- This is still, in part, an **application-layer** gate — a non-staff
+  member can't reach the staff *UI*, and RLS now covers several tables
+  (see Row Level Security below), but `members` itself — the table
+  `role`-gating depends on — doesn't have RLS yet, so the anon key can
+  still read or write `role`/`auth_user_id` directly regardless of what
+  the UI shows. Closing that gap is the next RLS migration.
 
 ### Member row linking model
 
@@ -232,14 +344,13 @@ editor run didn't take effect the first couple of times; if schema changes
 ever seem not to have landed, query `information_schema.columns` directly
 rather than assuming a SQL editor run succeeded.) Adds:
 
-1. `members.role` (`'member' | 'staff'`, default `'member'`) — column
-   only, nothing reads it yet.
+1. `members.role` (`'member' | 'staff'`, default `'member'`) — now read by
+   `StaffGate` (see Staff access control above) to gate the staff portal.
 2. `members.auth_user_id` — the soft link described above.
 
-Deliberately does **not** add Row Level Security — every table is exactly
-as open via the anon key as before this migration. Flagged in the
-migration's own header comment as deferred alongside staff role-gating,
-not forgotten.
+Deliberately does **not** add Row Level Security itself — that started
+later, table by table, once both real auth and staff gating existed (see
+Row Level Security above).
 
 ### Known gotcha: sandboxed link scanners
 
@@ -284,30 +395,55 @@ metadata. Installable as a PWA.
 
 ## Build status
 
-**Member side complete and Supabase-backed**, including real auth.
-Multi-marina state works end-to-end with persistence across hard reloads.
-Magic-link sign-in confirmed working (Resend SMTP). TypeScript clean, zero
-console errors on the existing (pre-auth-work) flows.
+**Phase 1 MVP is functionally complete.** Member side is fully
+Supabase-backed including real auth — multi-marina state works end-to-end
+with persistence across hard reloads, magic-link sign-in is confirmed
+working (Resend SMTP), and `NewMemberFlow` (username → home marina →
+landing in the app) is confirmed working end to end. Staff side is
+Supabase-backed (dashboard stats, announcements table, members list) with
+real role-based access control: `StaffGate` confirmed working in both
+directions — a non-staff member hitting `/dashboard`, `/members`, or
+`/announcements/new` directly is redirected to `/home`, and setting
+`members.role = 'staff'` on a linked row grants normal access on the next
+session resolution. TypeScript clean throughout.
 
-**Not yet re-verified:** a full click-through of `NewMemberFlow` (magic
-link → username → marina choice → landing in the app with the right
-member/marina data) since the last fix (`002_auth.sql` actually being
-applied, which resolved a "column does not exist" error on the member
-insert). The pieces have been individually confirmed against the live DB,
-but not the whole path in one go.
+**Known remaining gaps, not blockers for Phase 1 sign-off:**
+- The announcement composer (`(staff)/announcements/new/`) is still
+  UI-only — `submit()` navigates to `/dashboard` but writes nothing.
+- `MarinaProvider.tsx` still imports `sampleMarinas`, `defaultMemberMarinas`,
+  `currentMember`, `communityPosts` from `lib/data.ts` as initial/error-path
+  state. A failed fetch can leave this mock data in place indefinitely with
+  no visible error in the UI — all six fetch sites now log via
+  `describeError()` so this is at least visible in the console (worth doing
+  before RLS work specifically so a broken policy doesn't hide silently
+  behind plausible-looking fallback data), but the fallback behavior itself
+  is unchanged.
+- Staff routes are still scoped to a single hardcoded `STAFF_MARINA_ID`
+  ("shilshole") in `staff-db.ts` — there's no per-staff-account marina
+  scoping yet (see next planned work below).
 
-**Staff side partially migrated:** dashboard and members list are
-Supabase-backed (scoped to a hardcoded marina, no staff session concept
-yet). The announcement composer remains UI-only with no backend at all,
-same as it's always been.
+**Next planned work, in priority order:**
 
-**Next planned work:** staff access control — gate `/dashboard`,
-`/members`, and `/announcements/new` behind `members.role = 'staff'`, now
-that both real auth and the `role` column exist. Worth finishing
-`NewMemberFlow` E2E verification first. Row Level Security is still
-deferred and should probably happen alongside the staff-gating work, not
-after — right now every table is fully open via the anon key regardless of
-auth state.
+1. **Row Level Security — in progress.** Done: `marinas`, `marina_hours`,
+   `amenities`, `contacts`, `marina_memberships` (see Row Level Security
+   above for what each policy allows). Still fully open via the anon key:
+   `members`, `pinned_posts`, `announcements`, `community_posts`,
+   `post_likes`, `post_comments`. `members` is the most urgent of these —
+   it's the table `StaffGate`'s role check and every other policy's
+   staff/self check depend on, so until it has RLS, `role` and
+   `auth_user_id` are still writable by anyone via the anon key regardless
+   of what the UI shows.
+2. **Public "Marina Staff sign-up" claim flow** — after RLS, move `role`
+   from a single global column on `members` to a per-marina scope on
+   `marina_memberships` (a member could plausibly be staff at one marina
+   and a regular member at another — every RLS policy so far treats staff
+   as global, see Row Level Security above), and build a real sign-up path
+   for staff accounts instead of the manual SQL-editor role flip used for
+   testing.
+3. Also deferred: PWA manifest verification (installability hasn't been
+   re-tested since the auth work), NOAA weather API integration for
+   `ConditionsStrip` (currently static/seeded), and later-roadmap features
+   below.
 
 **Explicitly out of scope for Phase 1** (per `design/cleat-full-overview.html`):
 issue reporting, marina map, events, and a separate Documents section. Marina
