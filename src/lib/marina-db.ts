@@ -24,6 +24,8 @@ interface DbMarinaRow {
   location: string;
   status: "verified" | "community";
   banner_image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
   conditions_tide: string | null;
   conditions_tide_trend: string | null;
   conditions_water_temp: string | null;
@@ -70,6 +72,8 @@ function toMarina(row: DbMarinaRow): Marina {
     location: row.location,
     slip: "",
     bannerImageUrl: row.banner_image_url ?? undefined,
+    latitude: row.latitude ?? undefined,
+    longitude: row.longitude ?? undefined,
     status: row.status,
     conditions: {
       tide: row.conditions_tide ?? "",
@@ -93,6 +97,8 @@ function toMarina(row: DbMarinaRow): Marina {
 // ── public API ───────────────────────────────────────────────────────────────
 
 export async function fetchMarinas(): Promise<Marina[]> {
+  // `*` already covers latitude/longitude — no select-clause change needed
+  // now that those columns exist on the table (see 008_marina_coordinates.sql).
   const { data, error } = await supabase
     .from("marinas")
     .select("*, marina_hours(*), amenities(*)");

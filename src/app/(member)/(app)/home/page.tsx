@@ -1,24 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { HeroBanner } from "@/components/member/HeroBanner";
 import { ConditionsStrip } from "@/components/member/ConditionsStrip";
 import { MarinaSwitcherSheet } from "@/components/member/MarinaSwitcherSheet";
 import { useMarina } from "@/components/member/MarinaProvider";
 import { ChevronRightIcon, NewsIcon, UserIcon } from "@/components/icons";
+import { describeError } from "@/lib/errors";
+import type { LiveConditions } from "@/lib/types";
 
 const QUICK_ACTIONS = [
   { href: "/news", label: "Announcements", Icon: NewsIcon },
   { href: "/contacts", label: "Contacts", Icon: UserIcon },
 ];
 
+const LOADING_CONDITIONS: LiveConditions = {
+  tide: { status: "loading" },
+  wind: { status: "loading" },
+};
+const UNAVAILABLE_CONDITIONS: LiveConditions = {
+  tide: { status: "unavailable" },
+  wind: { status: "unavailable" },
+};
+
 export default function HomePage() {
   const { activeMarina, boardAnnouncements } = useMarina();
   const [showSwitcher, setShowSwitcher] = useState(false);
+  const [liveConditions, setLiveConditions] = useState<LiveConditions>(LOADING_CONDITIONS);
   // fetchMarinaBoardData already filters to status "sent" and orders newest
   // first, so the first entry is the latest published announcement.
   const latest = boardAnnouncements[0];
+
+  useEffect(() => {
+    const { latitude, longitude } = activeMarina;
+    if (latitude == null || longitude == null) {
+      setLiveConditions(UNAVAILABLE_CONDITIONS);
+      return;
+    }
+
+    let cancelled = false;
+    setLiveConditions(LOADING_CONDITIONS);
+
+    fetch(`/api/conditions?lat=${latitude}&lng=${longitude}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`/api/conditions responded ${res.status}`);
+        return res.json() as Promise<LiveConditions>;
+      })
+      .then((data) => {
+        if (!cancelled) setLiveConditions(data);
+      })
+      .catch((err) => {
+        console.error("[HomePage] live conditions fetch failed:", describeError(err));
+        if (!cancelled) setLiveConditions(UNAVAILABLE_CONDITIONS);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeMarina]);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -28,7 +68,7 @@ export default function HomePage() {
         imageUrl={activeMarina.bannerImageUrl}
         onNameClick={() => setShowSwitcher(true)}
       />
-      <ConditionsStrip conditions={activeMarina.conditions} />
+      <ConditionsStrip live={liveConditions} />
 
       {latest && (
         <Link

@@ -98,6 +98,35 @@ export interface MarinaConditions {
   wind: string;
 }
 
+/**
+ * Real-time tide/wind, fetched from NOAA/NWS (see src/lib/noaa.ts) rather
+ * than stored on the marina row. "unavailable" covers both a marina with no
+ * coordinates and a live fetch that failed/timed out — the UI treats both
+ * the same way (see ConditionsStrip), it just never shows stale/fake data
+ * in either case.
+ */
+export type LiveConditionStatus = "loading" | "ok" | "unavailable";
+
+export interface LiveTideCondition {
+  status: LiveConditionStatus;
+  /** e.g. "4.2 ft" (MLLW). Only set when status === "ok". */
+  height?: string;
+  trend?: "rising" | "falling" | "steady";
+}
+
+export interface LiveWindCondition {
+  status: LiveConditionStatus;
+  /** e.g. "10 mph". Only set when status === "ok". */
+  speed?: string;
+  /** e.g. "NW". Only set when status === "ok". */
+  direction?: string;
+}
+
+export interface LiveConditions {
+  tide: LiveTideCondition;
+  wind: LiveWindCondition;
+}
+
 /** One row of the marina profile's hours card, e.g. "Fri – Sun" / "8:00 AM – 6:00 PM". */
 export interface MarinaHoursRow {
   label: string;
@@ -146,6 +175,9 @@ export interface Marina {
   slip: string;
   /** Custom banner uploaded by marina staff. Falls back to the default gradient banner when unset. */
   bannerImageUrl?: string;
+  /** Used to fetch live NOAA tide/NWS wind data — see src/lib/noaa.ts. Unset for marinas without coordinates yet. */
+  latitude?: number;
+  longitude?: number;
   status: "verified" | "community";
   conditions: MarinaConditions;
   hours: MarinaHours;
